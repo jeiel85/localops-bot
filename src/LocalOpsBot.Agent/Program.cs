@@ -1,6 +1,7 @@
 using System.Runtime.Versioning;
 using LocalOpsBot.Agent.Services;
 using LocalOpsBot.Core;
+using LocalOpsBot.Core.Notifications;
 using LocalOpsBot.Data;
 using LocalOpsBot.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +25,10 @@ builder.Services.AddHostedService<TelegramPollingService>();
 builder.Services.AddHostedService<BootNotificationService>();
 builder.Services.AddHostedService<WatchdogBackgroundService>();
 builder.Services.AddHostedService<EventLogPollingService>();
+builder.Services.AddLocalOpsNotificationForwarding(builder.Configuration);
+builder.Services.AddSingleton<NotificationBridgeServer>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<NotificationBridgeServer>());
+builder.Services.AddHostedService<NotificationForwardingService>();
 
 IHost host = builder.Build();
 await host.RunAsync();
