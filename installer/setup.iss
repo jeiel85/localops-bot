@@ -111,7 +111,7 @@ begin
       MsgBox('Bot token is required. You can get one from @BotFather on Telegram.', mbError, MB_OK);
       Result := False;
     end
-    else if not (Token[1] in ['0'..'9']) then
+    else if not ((Token[1] >= '0') and (Token[1] <= '9')) then
     begin
       MsgBox('Token should start with digits (e.g. 123456:ABC...).', mbError, MB_OK);
       Result := False;
