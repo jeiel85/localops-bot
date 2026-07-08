@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Installs LocalOpsBot Agent + Tray with interactive configuration.
+    Installs Homebase (Agent + Tray) with interactive configuration.
 .DESCRIPTION
     One-command installer that handles everything:
       - Prompts for Telegram bot token and allowed chat IDs
@@ -43,7 +43,7 @@ param(
 
 # --- Constants ---
 $ServiceName  = "LocalOpsBot.Agent"
-$DisplayName  = "LocalOpsBot Agent"
+$DisplayName  = "Homebase"
 $AgentDir     = "C:\Program Files\LocalOpsBot\Agent"
 $TrayDir      = "C:\Program Files\LocalOpsBot\Tray"
 $AgentExe     = Join-Path $AgentDir "LocalOpsBot.Agent.exe"
@@ -195,7 +195,7 @@ if ($HasAgentBinaries) {
     } catch { }
 }
 Write-Host "`n==============================================" -ForegroundColor Cyan
-Write-Host "   LocalOps Bot $verText Setup" -ForegroundColor Cyan
+Write-Host "   Homebase $verText Setup" -ForegroundColor Cyan
 Write-Host "==============================================`n" -ForegroundColor Cyan
 
 # --- Check for existing installation ---

@@ -4,7 +4,7 @@ param(
 
 <#
 .SYNOPSIS
-    Uninstalls LocalOpsBot Agent service and optionally removes all data.
+    Uninstalls the Homebase service and optionally removes all data.
 .DESCRIPTION
     Default (keep-data): removes service, startup registration, and binaries.
     Config/data/logs are preserved.

@@ -1,0 +1,149 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="LocalOpsBot.Tray.OnboardingWindow"
+        Title="Homebase — Welcome"
+        Icon="pack://application:,,,/Resources/homebase.ico"
+        Width="460" Height="640"
+        ResizeMode="CanResize"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource Brush.Canvas}"
+        FontFamily="{StaticResource Font.Sans}"
+        TextOptions.TextFormattingMode="Display">
+  <Grid Margin="14">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <!-- ═ Masthead: carbon command slab ═ -->
+    <Border Grid.Row="0" Style="{StaticResource SectionHeaderBar}" Margin="0,0,0,12">
+      <StackPanel Orientation="Horizontal">
+        <TextBlock VerticalAlignment="Center"
+                   FontFamily="{StaticResource Font.Display}" FontWeight="Black"
+                   FontSize="16" Foreground="{StaticResource Brush.OnDark}" Text="HOMEBASE"/>
+        <TextBlock VerticalAlignment="Center" Margin="8,3,0,0"
+                   Style="{StaticResource Type.Micro}" Foreground="{StaticResource Brush.Amber}"
+                   Text="WELCOME"/>
+      </StackPanel>
+    </Border>
+
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+      <StackPanel>
+
+        <!-- ═ Welcome bubble (mascot-style rounded card) ═ -->
+        <Border Background="{StaticResource Brush.Surface}" CornerRadius="10" Padding="12"
+                BorderBrush="{StaticResource Brush.Hairline}" BorderThickness="1" Margin="0,0,0,12">
+          <StackPanel>
+            <TextBlock Style="{StaticResource Type.BodyStrong}" Text="Welcome to Homebase!"/>
+            <TextBlock Style="{StaticResource Type.Body}" TextWrapping="Wrap" Margin="0,4,0,0"
+                       Text="Let's make sure your PC is talking to Telegram. Here's what's ready and what still needs setup."/>
+          </StackPanel>
+        </Border>
+
+        <!-- ═ CONNECTION checklist ═ -->
+        <Border Style="{StaticResource SectionHeaderBar}">
+          <TextBlock Style="{StaticResource Type.SectionLabel}" Text="CONNECTION"/>
+        </Border>
+        <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+          <StackPanel>
+
+            <!-- Agent service -->
+            <Grid Margin="0,4">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <Border x:Name="ServiceChip" Grid.Column="0" Width="76" Padding="7,3" CornerRadius="2"
+                      VerticalAlignment="Center" Background="{StaticResource Brush.Hairline}">
+                <TextBlock x:Name="ServiceChipText" Text="…" HorizontalAlignment="Center"
+                           Foreground="{StaticResource Brush.OnDark}" FontSize="10" FontWeight="Bold"/>
+              </Border>
+              <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource Type.BodyStrong}" Text="Agent service"/>
+                <TextBlock x:Name="ServiceStatusText" Style="{StaticResource Type.Micro}"
+                           TextWrapping="Wrap" Text="checking…"/>
+              </StackPanel>
+            </Grid>
+
+            <!-- Bot token -->
+            <Grid Margin="0,4">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <Border x:Name="TokenChip" Grid.Column="0" Width="76" Padding="7,3" CornerRadius="2"
+                      VerticalAlignment="Center" Background="{StaticResource Brush.Hairline}">
+                <TextBlock x:Name="TokenChipText" Text="…" HorizontalAlignment="Center"
+                           Foreground="{StaticResource Brush.OnDark}" FontSize="10" FontWeight="Bold"/>
+              </Border>
+              <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource Type.BodyStrong}" Text="Bot token"/>
+                <TextBlock x:Name="TokenStatusText" Style="{StaticResource Type.Micro}"
+                           TextWrapping="Wrap" Text="checking…"/>
+              </StackPanel>
+            </Grid>
+
+            <!-- Telegram chat -->
+            <Grid Margin="0,4">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <Border x:Name="ChatChip" Grid.Column="0" Width="76" Padding="7,3" CornerRadius="2"
+                      VerticalAlignment="Center" Background="{StaticResource Brush.Hairline}">
+                <TextBlock x:Name="ChatChipText" Text="…" HorizontalAlignment="Center"
+                           Foreground="{StaticResource Brush.OnDark}" FontSize="10" FontWeight="Bold"/>
+              </Border>
+              <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource Type.BodyStrong}" Text="Telegram chat"/>
+                <TextBlock x:Name="ChatStatusText" Style="{StaticResource Type.Micro}"
+                           TextWrapping="Wrap" Text="checking…"/>
+              </StackPanel>
+            </Grid>
+
+            <!-- Actions -->
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+              <Button x:Name="TestButton" Style="{StaticResource Button.Signal}"
+                      Content="SEND TEST MESSAGE" Click="TestMessage_Click"/>
+              <Button x:Name="RecheckButton" Style="{StaticResource Button.Amber}"
+                      Content="RE-CHECK" Margin="8,0,0,0" Click="Recheck_Click"/>
+            </StackPanel>
+            <TextBlock x:Name="TestResultText" Style="{StaticResource Type.Micro}"
+                       TextWrapping="Wrap" Margin="0,8,0,0"/>
+          </StackPanel>
+        </Border>
+
+        <!-- ═ GUIDANCE ═ -->
+        <Border Style="{StaticResource SectionHeaderBar}">
+          <TextBlock Style="{StaticResource Type.SectionLabel}" Text="FIRST TIME?"/>
+        </Border>
+        <Border Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Style="{StaticResource Type.Body}" TextWrapping="Wrap"
+                       Text="1. Create a bot with BotFather and copy its token."/>
+            <TextBlock Style="{StaticResource Type.Body}" TextWrapping="Wrap" Margin="0,3,0,0"
+                       Text="2. Send your bot any message so it can learn your chat ID."/>
+            <TextBlock Style="{StaticResource Type.Body}" TextWrapping="Wrap" Margin="0,3,0,0"
+                       Text="3. Re-run the installer to save your token and chat ID."/>
+            <TextBlock Margin="0,8,0,0" FontFamily="{StaticResource Font.Sans}" FontSize="12" FontWeight="Bold">
+              <Hyperlink NavigateUri="https://t.me/botfather"
+                         RequestNavigate="Hyperlink_RequestNavigate"
+                         Foreground="{StaticResource Brush.InkSoft}">Open @BotFather</Hyperlink>
+            </TextBlock>
+          </StackPanel>
+        </Border>
+
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- ═ Footer ═ -->
+    <DockPanel Grid.Row="2" Margin="0,12,0,0" LastChildFill="False">
+      <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" MaxWidth="250"
+                 Style="{StaticResource Type.Micro}" TextWrapping="Wrap"
+                 Text="To change your token or chat ID later, re-run the installer."/>
+      <Button DockPanel.Dock="Right" Style="{StaticResource Button.Carbon}"
+              Content="GET STARTED" Click="GetStarted_Click"/>
+    </DockPanel>
+  </Grid>
+</Window>

@@ -47,6 +47,21 @@ public sealed class TelegramClientTests
     }
 
     [Fact]
+    public async Task SendMessage_without_options_applies_default_html_parse_mode()
+    {
+        // Regression: command replies pass null options; they must still receive a
+        // parse_mode so <b>/<code> tags render instead of showing up as raw text.
+        var handler = new FakeHttpMessageHandler();
+        handler.QueueResponse(HttpStatusCode.OK, """{"ok":true,"result":{"message_id":1}}""");
+        var client = CreateClient(handler);
+
+        await client.SendMessageAsync(1, "<b>hi</b>", null, CancellationToken.None);
+
+        var body = await handler.Requests.Single().Content!.ReadAsStringAsync();
+        Assert.Contains("\"parse_mode\":\"HTML\"", body);
+    }
+
+    [Fact]
     public async Task SendMessage_failure_throws_TelegramApiException()
     {
         var handler = new FakeHttpMessageHandler();

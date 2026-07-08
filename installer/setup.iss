@@ -1,7 +1,7 @@
-; LocalOps Bot Setup — Inno Setup Script
+; Homebase Setup — Inno Setup Script
 ; Build: iscc installer\setup.iss
 
-#define AppName "LocalOps Bot"
+#define AppName "Homebase"
 ; Version is injected by the release workflow via: iscc /DAppVersion=<tag>
 ; The guard keeps local `iscc installer\setup.iss` builds working with a dev default.
 #ifndef AppVersion
@@ -58,8 +58,8 @@ Source: "setup.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "uninstall-service.ps1"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\LocalOps Bot"; Filename: "{app}\Tray\LocalOpsBot.Tray.exe"; Components: tray
-Name: "{group}\Uninstall LocalOps Bot"; Filename: "{uninstallexe}"
+Name: "{group}\Homebase"; Filename: "{app}\Tray\LocalOpsBot.Tray.exe"; Components: tray
+Name: "{group}\Uninstall Homebase"; Filename: "{uninstallexe}"
 
 [Registry]
 ; Tray auto-start for current user

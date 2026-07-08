@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Bootstrap installer for LocalOps Bot — downloads and runs setup.
+    Bootstrap installer for Homebase — downloads and runs setup.
 .DESCRIPTION
     Run this one-liner from an elevated PowerShell prompt:
       irm https://github.com/jeiel85/localops-bot/releases/latest/download/bootstrap.ps1 | iex
@@ -14,7 +14,7 @@ $TempDir = Join-Path $env:TEMP "LocalOpsBot-Bootstrap"
 $SetupZip = Join-Path $TempDir "LocalOpsBot-Setup.zip"
 
 Write-Host "==============================================" -ForegroundColor Cyan
-Write-Host "  LocalOps Bot — Bootstrap Installer" -ForegroundColor Cyan
+Write-Host "  Homebase — Bootstrap Installer" -ForegroundColor Cyan
 Write-Host "==============================================" -ForegroundColor Cyan
 Write-Host ""
 

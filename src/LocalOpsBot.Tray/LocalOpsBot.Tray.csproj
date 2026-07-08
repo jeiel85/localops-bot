@@ -2,15 +2,29 @@
   <PropertyGroup>
     <TargetFramework>net9.0-windows10.0.17763.0</TargetFramework>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <OutputType>WinExe</OutputType>
     <NoWarn>NU1701</NoWarn>
+    <ApplicationIcon>Resources\homebase.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\LocalOpsBot.Core\LocalOpsBot.Core.csproj" />
     <ProjectReference Include="..\LocalOpsBot.Infrastructure\LocalOpsBot.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Hardcodet.Wpf.TaskbarNotification" Version="1.0.5" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- WinForms/Drawing are used only by TrayIconManager (which imports them explicitly);
+         drop their implicit global usings so WPF types (Application, Brush, Color…) stay
+         unambiguous in the XAML code-behind. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Multi-resolution Homebase icon (part E). ApplicationIcon stamps the exe/taskbar/
+         Alt-Tab icon; the Resource copy is loaded at runtime for the tray + window icons. -->
+    <Resource Include="Resources\homebase.ico" />
   </ItemGroup>
 </Project>

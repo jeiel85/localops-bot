@@ -20,7 +20,7 @@ public sealed class HelpCommandHandler : ICommandHandler
     {
         var lines = new List<string>
         {
-            "<b>\u2139\ufe0f LocalOps Bot Commands</b>\n"
+            "<b>\u2139\ufe0f Homebase Commands</b>\n"
         };
 
         foreach (var h in _services.GetServices<ICommandHandler>().OrderBy(h => h.CommandName))
@@ -30,7 +30,7 @@ public sealed class HelpCommandHandler : ICommandHandler
 
         lines.Add("");
         lines.Add("Tip: Use /mute 1h to silence alerts, /unmute to resume.");
-        lines.Add("Source: https://github.com/anomalyco/localops_bot");
+        lines.Add("Source: https://github.com/jeiel85/localops-bot");
 
         return Task.FromResult(new CommandResult(true, string.Join("\n", lines)));
     }

@@ -1,0 +1,199 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- ══════════════════════════════════════════════════════════════
+       Homebase design system — Nintendo.com (2001) "console chrome"
+       Y2K hardware faceplate: periwinkle metal plates, carbon command
+       slabs, warm amber/signal reserved strictly for wayfinding.
+       Source: guide/DESIGN-nintendo-2001.md
+       ══════════════════════════════════════════════════════════════ -->
+
+  <!-- ── Palette ── -->
+  <Color x:Key="Color.Canvas">#FF7A8ABA</Color>
+  <Color x:Key="Color.Carbon">#FF21242E</Color>
+  <Color x:Key="Color.ChromeIndigo">#FF3D4F97</Color>
+  <Color x:Key="Color.Signal">#FFF68D1F</Color>
+  <Color x:Key="Color.Amber">#FFECAB37</Color>
+
+  <SolidColorBrush x:Key="Brush.Canvas"       Color="#7A8ABA"/> <!-- primary chrome body -->
+  <SolidColorBrush x:Key="Brush.CanvasSoft"   Color="#9FBEE7"/> <!-- pale-sky inset strip -->
+  <SolidColorBrush x:Key="Brush.Periwinkle"   Color="#8BA1D4"/> <!-- raised mid panels -->
+  <SolidColorBrush x:Key="Brush.Lavender"     Color="#ACACE7"/> <!-- hero / promo fields -->
+  <SolidColorBrush x:Key="Brush.Ice"          Color="#C0D5E6"/>
+  <SolidColorBrush x:Key="Brush.Carbon"       Color="#21242E"/> <!-- command slabs, ink -->
+  <SolidColorBrush x:Key="Brush.ChromeIndigo" Color="#3D4F97"/> <!-- bevel shadow line -->
+  <SolidColorBrush x:Key="Brush.MutedIndigo"  Color="#60619C"/> <!-- recessed chrome -->
+  <SolidColorBrush x:Key="Brush.Platinum"     Color="#DEDEDE"/> <!-- inset list surface -->
+  <SolidColorBrush x:Key="Brush.Surface"      Color="#FFFFFF"/> <!-- white cards/fields -->
+  <SolidColorBrush x:Key="Brush.Hairline"     Color="#5A5F8C"/>
+  <SolidColorBrush x:Key="Brush.Amber"        Color="#ECAB37"/> <!-- utility chips/badges -->
+  <SolidColorBrush x:Key="Brush.Signal"       Color="#F68D1F"/> <!-- forward / submit -->
+  <SolidColorBrush x:Key="Brush.NavGold"      Color="#E48600"/> <!-- nav words / pressed -->
+  <SolidColorBrush x:Key="Brush.Primary"      Color="#E60012"/> <!-- brand red / alert -->
+  <SolidColorBrush x:Key="Brush.Ink"          Color="#21242E"/> <!-- text on light -->
+  <SolidColorBrush x:Key="Brush.InkSoft"      Color="#3D4F97"/> <!-- secondary text -->
+  <SolidColorBrush x:Key="Brush.OnDark"       Color="#FFFFFF"/> <!-- text on carbon/warm -->
+  <SolidColorBrush x:Key="Brush.SystemsTeal"  Color="#206479"/>
+
+  <!-- Semantic status — cool by default; warm/red only at thresholds -->
+  <SolidColorBrush x:Key="Brush.StatusOk"   Color="#3D4F97"/> <!-- chrome-indigo (normal) -->
+  <SolidColorBrush x:Key="Brush.StatusWarn" Color="#ECAB37"/> <!-- amber (elevated) -->
+  <SolidColorBrush x:Key="Brush.StatusBad"  Color="#E60012"/> <!-- brand red (critical) -->
+  <SolidColorBrush x:Key="Brush.StatusOnline"  Color="#2E7D32"/>
+  <SolidColorBrush x:Key="Brush.StatusOffline" Color="#E60012"/>
+
+  <FontFamily x:Key="Font.Sans">Arial</FontFamily>
+  <FontFamily x:Key="Font.Display">Arial Black</FontFamily>
+
+  <!-- ── Typography ──
+       The chrome voice is uppercase Arial Bold; callers pass already-
+       uppercased text for section labels (WPF has no text-transform). -->
+  <Style x:Key="Type.SectionLabel" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.Sans}"/>
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="Foreground" Value="{StaticResource Brush.OnDark}"/>
+  </Style>
+  <Style x:Key="Type.Body" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.Sans}"/>
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="Foreground" Value="{StaticResource Brush.Ink}"/>
+  </Style>
+  <Style x:Key="Type.BodyStrong" TargetType="TextBlock" BasedOn="{StaticResource Type.Body}">
+    <Setter Property="FontWeight" Value="Bold"/>
+  </Style>
+  <Style x:Key="Type.Micro" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.Sans}"/>
+    <Setter Property="FontSize" Value="10"/>
+    <Setter Property="Foreground" Value="{StaticResource Brush.InkSoft}"/>
+  </Style>
+  <Style x:Key="Type.Label" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.Sans}"/>
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="Foreground" Value="{StaticResource Brush.InkSoft}"/>
+  </Style>
+  <Style x:Key="Type.Wordmark" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.Display}"/>
+    <Setter Property="FontWeight" Value="Black"/>
+    <Setter Property="FontSize" Value="22"/>
+    <Setter Property="Foreground" Value="{StaticResource Brush.OnDark}"/>
+  </Style>
+
+  <!-- ── Plates & Cards ──
+       Depth is physical bevel, not soft shadow: a chrome-indigo shadow
+       line beneath every plate (thicker bottom border approximates it). -->
+  <Style x:Key="Plate" TargetType="Border">
+    <Setter Property="Background" Value="{StaticResource Brush.Canvas}"/>
+    <Setter Property="BorderBrush" Value="{StaticResource Brush.ChromeIndigo}"/>
+    <Setter Property="BorderThickness" Value="1,1,1,2"/>
+    <Setter Property="Padding" Value="12"/>
+  </Style>
+  <Style x:Key="Card" TargetType="Border">
+    <Setter Property="Background" Value="{StaticResource Brush.Surface}"/>
+    <Setter Property="BorderBrush" Value="{StaticResource Brush.Hairline}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="Padding" Value="10"/>
+  </Style>
+  <Style x:Key="SectionHeaderBar" TargetType="Border">
+    <Setter Property="Background" Value="{StaticResource Brush.Carbon}"/>
+    <Setter Property="Padding" Value="8,4"/>
+  </Style>
+
+  <!-- ── Buttons ── -->
+  <!-- Amber utility button (Go / tools); presses to nav-gold -->
+  <Style x:Key="Button.Amber" TargetType="Button">
+    <Setter Property="Foreground" Value="{StaticResource Brush.Carbon}"/>
+    <Setter Property="Background" Value="{StaticResource Brush.Amber}"/>
+    <Setter Property="FontFamily" Value="{StaticResource Font.Sans}"/>
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Padding" Value="14,7"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="2"
+                  Padding="{TemplateBinding Padding}">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="bd" Property="Background" Value="{StaticResource Brush.NavGold}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="bd" Property="Opacity" Value="0.5"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Signal forward/submit button (white text) -->
+  <Style x:Key="Button.Signal" TargetType="Button" BasedOn="{StaticResource Button.Amber}">
+    <Setter Property="Foreground" Value="{StaticResource Brush.OnDark}"/>
+    <Setter Property="Background" Value="{StaticResource Brush.Signal}"/>
+    <Setter Property="Padding" Value="16,8"/>
+  </Style>
+
+  <!-- Carbon secondary/command button (sharp corners) -->
+  <Style x:Key="Button.Carbon" TargetType="Button">
+    <Setter Property="Foreground" Value="{StaticResource Brush.OnDark}"/>
+    <Setter Property="Background" Value="{StaticResource Brush.Carbon}"/>
+    <Setter Property="FontFamily" Value="{StaticResource Font.Sans}"/>
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Padding" Value="14,7"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="0"
+                  Padding="{TemplateBinding Padding}">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="bd" Property="Background" Value="{StaticResource Brush.MutedIndigo}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="bd" Property="Opacity" Value="0.5"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ── Gauge (CPU / RAM) — inset platinum track, chrome-indigo fill.
+       Foreground is overridden per-threshold in code (ok/warn/bad). -->
+  <Style x:Key="Gauge" TargetType="ProgressBar">
+    <Setter Property="Height" Value="16"/>
+    <Setter Property="Background" Value="{StaticResource Brush.Platinum}"/>
+    <Setter Property="Foreground" Value="{StaticResource Brush.StatusOk}"/>
+    <Setter Property="BorderBrush" Value="{StaticResource Brush.Hairline}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Minimum" Value="0"/>
+    <Setter Property="Maximum" Value="100"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ProgressBar">
+          <Border Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="0">
+            <Grid ClipToBounds="True">
+              <Border x:Name="PART_Track"/>
+              <Border x:Name="PART_Indicator" HorizontalAlignment="Left"
+                      Background="{TemplateBinding Foreground}"/>
+            </Grid>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+</ResourceDictionary>

@@ -81,7 +81,7 @@ try
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "LocalOpsBot Agent terminated unexpectedly");
+    Log.Fatal(ex, "Homebase Agent terminated unexpectedly");
     throw;
 }
 finally

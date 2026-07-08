@@ -5,7 +5,7 @@ param(
 
 <#
 .SYNOPSIS
-    Installs LocalOpsBot Agent as a Windows service and registers Tray for auto-start.
+    Installs Homebase (Agent service) and registers Tray for auto-start.
 .DESCRIPTION
     - Copies binaries from source directories to Program Files
     - Creates config/data/log directories in ProgramData
@@ -23,7 +23,7 @@ param(
 #Requires -RunAsAdministrator
 
 $ServiceName = "LocalOpsBot.Agent"
-$DisplayName = "LocalOpsBot Agent"
+$DisplayName = "Homebase"
 $AgentDir = "C:\Program Files\LocalOpsBot\Agent"
 $TrayDir = "C:\Program Files\LocalOpsBot\Tray"
 $AgentExe = Join-Path $AgentDir "LocalOpsBot.Agent.exe"

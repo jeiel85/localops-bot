@@ -1,51 +1,115 @@
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Net.Http;
-using System.Windows;
-using System.Windows.Controls;
-using Hardcodet.Wpf.TaskbarNotification;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using LocalOpsBot.Core.Updates;
+using LocalOpsBot.Tray.Services;
+using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
+using MessageBoxButton = System.Windows.MessageBoxButton;
+using MessageBoxImage = System.Windows.MessageBoxImage;
+using MessageBoxResult = System.Windows.MessageBoxResult;
 
 namespace LocalOpsBot.Tray;
 
+/// <summary>
+/// System-tray presence via WinForms NotifyIcon (a code-drawn icon that always renders,
+/// unlike the previous Hardcodet setup). Left-click toggles the Homebase dashboard popup;
+/// right-click opens a context menu.
+/// </summary>
 public sealed class TrayIconManager : IDisposable
 {
-    private readonly TaskbarIcon _trayIcon;
-    private readonly MenuItem _updateItem;
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool DestroyIcon(IntPtr handle);
+
+    private readonly NotifyIcon _trayIcon;
     private readonly UpdateService _updater;
+    private readonly ToolStripMenuItem _updateItem;
+    private SettingsWindow? _popup;
+    private OnboardingWindow? _onboarding;
 
     public TrayIconManager()
     {
         var http = new HttpClient();
-        http.DefaultRequestHeaders.UserAgent.ParseAdd("LocalOpsBot.Tray/0.1");
+        http.DefaultRequestHeaders.UserAgent.ParseAdd("Homebase.Tray/0.1");
         _updater = new UpdateService(http);
 
-        _trayIcon = new TaskbarIcon();
-        _trayIcon.ToolTipText = "LocalOps Bot";
+        _trayIcon = new NotifyIcon
+        {
+            Text = "Homebase",
+            Icon = LoadTrayIcon(),
+            Visible = true
+        };
+        _trayIcon.MouseClick += OnTrayClick;
 
-        var contextMenu = new ContextMenu();
-        var statusItem = new MenuItem { Header = "Status: Agent connected", IsEnabled = false };
-        var forwardingItem = new MenuItem { Header = "Notification Forwarding: Off", IsEnabled = false };
-        var separator1 = new MenuItem();
-        var settingsItem = new MenuItem { Header = "Open Settings" };
-        settingsItem.Click += (_, _) => OpenSettings();
-        var separator2 = new MenuItem();
-        _updateItem = new MenuItem { Header = $"v{_updater.GetCurrentVersionString()} \u2014 Check for Updates" };
+        var menu = new ContextMenuStrip();
+        var openItem = new ToolStripMenuItem("Open Homebase");
+        openItem.Click += (_, _) => TogglePopup();
+        menu.Items.Add(openItem);
+
+        var setupItem = new ToolStripMenuItem("Setup / Welcome");
+        setupItem.Click += (_, _) => ShowOnboarding();
+        menu.Items.Add(setupItem);
+
+        _updateItem = new ToolStripMenuItem($"v{_updater.GetCurrentVersionString()} — Check for Updates");
         _updateItem.Click += async (_, _) => await CheckForUpdatesAsync();
-        var separator3 = new MenuItem();
-        var exitItem = new MenuItem { Header = "Exit" };
+        menu.Items.Add(_updateItem);
+
+        menu.Items.Add(new ToolStripSeparator());
+        var exitItem = new ToolStripMenuItem("Exit");
         exitItem.Click += (_, _) => Application.Current.Shutdown();
+        menu.Items.Add(exitItem);
 
-        contextMenu.Items.Add(statusItem);
-        contextMenu.Items.Add(forwardingItem);
-        contextMenu.Items.Add(separator1);
-        contextMenu.Items.Add(settingsItem);
-        contextMenu.Items.Add(separator2);
-        contextMenu.Items.Add(_updateItem);
-        contextMenu.Items.Add(separator3);
-        contextMenu.Items.Add(exitItem);
-
-        _trayIcon.ContextMenu = contextMenu;
+        _trayIcon.ContextMenuStrip = menu;
 
         _ = BackgroundCheckAsync();
+
+        // First launch for this Windows user: walk them through the connection checklist
+        // once. Guarded so a window failure can never take down the tray itself; it only
+        // ever shows again on demand from the "Setup / Welcome" menu item.
+        try
+        {
+            if (!OnboardingState.IsCompleted())
+                ShowOnboarding();
+        }
+        catch { /* onboarding is non-essential — never let it break tray startup */ }
+    }
+
+    private void OnTrayClick(object? sender, MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Left) TogglePopup();
+    }
+
+    private void TogglePopup()
+    {
+        _popup ??= new SettingsWindow();
+        if (_popup.IsVisible) _popup.Hide();
+        else _popup.ShowNearTray();
+    }
+
+    private void ShowPopup()
+    {
+        _popup ??= new SettingsWindow();
+        if (_popup.IsVisible) _popup.Activate();
+        else _popup.ShowNearTray();
+    }
+
+    private void ShowOnboarding()
+    {
+        if (_onboarding is { IsVisible: true })
+        {
+            _onboarding.Activate();
+            return;
+        }
+        _onboarding = new OnboardingWindow();
+        // Open the dashboard only after onboarding has fully closed — deferring past the
+        // close avoids a focus race with SettingsWindow's hide-on-deactivate behaviour.
+        _onboarding.GetStartedRequested += () =>
+            Application.Current.Dispatcher.BeginInvoke(new Action(ShowPopup));
+        _onboarding.Closed += (_, _) => _onboarding = null;
+        _onboarding.Show();
+        _onboarding.Activate();
     }
 
     private async Task BackgroundCheckAsync()
@@ -55,62 +119,102 @@ public sealed class TrayIconManager : IDisposable
             await Task.Delay(TimeSpan.FromSeconds(10));
             var info = await _updater.CheckForUpdateAsync(CancellationToken.None);
             if (info != null)
-            {
-                _updateItem.Header = $"\ud83d\udce1 Update v{info.Version} available!";
-                _updateItem.FontWeight = FontWeights.Bold;
-            }
+                _updateItem.Text = $"📡 Update v{info.Version} available!";
         }
-        catch { }
+        catch { /* update check is best-effort */ }
     }
 
     private async Task CheckForUpdatesAsync()
     {
-        _updateItem.Header = "Checking...";
-        _updateItem.IsEnabled = false;
-
+        _updateItem.Text = "Checking…";
+        _updateItem.Enabled = false;
         try
         {
             var info = await _updater.CheckForUpdateAsync(CancellationToken.None);
             if (info == null)
             {
-                _updateItem.Header = $"\u2705 v{_updater.GetCurrentVersionString()} \u2014 up to date";
-                MessageBox.Show($"LocalOps Bot is up to date (v{_updater.GetCurrentVersionString()}).", "Update Check", MessageBoxButton.OK, MessageBoxImage.Information);
+                _updateItem.Text = $"✅ v{_updater.GetCurrentVersionString()} — up to date";
+                MessageBox.Show($"Homebase is up to date (v{_updater.GetCurrentVersionString()}).",
+                    "Update Check", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
-                var result = MessageBox.Show($"Update v{info.Version} available!\nPublished: {info.PublishedAt:yyyy-MM-dd}\n\nDownload and install now?", "Update Available", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = MessageBox.Show(
+                    $"Update v{info.Version} available!\nPublished: {info.PublishedAt:yyyy-MM-dd}\n\nDownload and install now?",
+                    "Update Available", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (result == MessageBoxResult.Yes)
                 {
-                    _updateItem.Header = "Downloading update...";
+                    _updateItem.Text = "Downloading update…";
                     var zip = await _updater.DownloadUpdateAsync(info, null, CancellationToken.None);
                     _updater.ApplyUpdate(zip);
                     Application.Current.Shutdown();
                 }
                 else
                 {
-                    _updateItem.Header = $"\ud83d\udce1 v{info.Version} available";
+                    _updateItem.Text = $"📡 v{info.Version} available";
                 }
             }
         }
         catch (Exception ex)
         {
-            _updateItem.Header = $"\u26a0\ufe0f Update check failed";
-            MessageBox.Show($"Update check failed: {ex.Message}", "Update Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            _updateItem.Text = "⚠️ Update check failed";
+            MessageBox.Show($"Update check failed: {ex.Message}",
+                "Update Error", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         finally
         {
-            _updateItem.IsEnabled = true;
+            _updateItem.Enabled = true;
         }
     }
 
-    private static void OpenSettings()
+    // Prefer the shipped multi-resolution .ico (crisp at every DPI); fall back to the
+    // code-drawn glyph below if the resource can't be loaded for any reason.
+    private static Icon LoadTrayIcon()
     {
-        var window = new SettingsWindow();
-        window.ShowDialog();
+        try
+        {
+            var uri = new Uri("pack://application:,,,/Resources/homebase.ico");
+            using var stream = Application.GetResourceStream(uri)!.Stream;
+            return new Icon(stream, SystemInformation.SmallIconSize);
+        }
+        catch
+        {
+            return DrawTrayIcon();
+        }
+    }
+
+    // Fallback tray glyph: a small house in Homebase's Nintendo palette (carbon roof,
+    // amber body), drawn in code if Resources/homebase.ico can't be loaded.
+    private static Icon DrawTrayIcon()
+    {
+        using var bmp = new Bitmap(16, 16);
+        using (var g = Graphics.FromImage(bmp))
+        {
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.Clear(Color.Transparent);
+            using var roof = new SolidBrush(Color.FromArgb(0x21, 0x24, 0x2E)); // carbon
+            g.FillPolygon(roof, new[] { new PointF(8f, 1.5f), new PointF(1.5f, 7.5f), new PointF(14.5f, 7.5f) });
+            using var body = new SolidBrush(Color.FromArgb(0xEC, 0xAB, 0x37)); // amber
+            g.FillRectangle(body, 3.5f, 7.5f, 9f, 7f);
+            using var door = new SolidBrush(Color.FromArgb(0x21, 0x24, 0x2E));
+            g.FillRectangle(door, 6.5f, 10f, 3f, 4.5f);
+        }
+        var handle = bmp.GetHicon();
+        try
+        {
+            using var icon = Icon.FromHandle(handle);
+            return (Icon)icon.Clone();
+        }
+        finally
+        {
+            DestroyIcon(handle);
+        }
     }
 
     public void Dispose()
     {
-        _trayIcon?.Dispose();
+        _trayIcon.Visible = false;
+        _trayIcon.Icon?.Dispose();
+        _trayIcon.Dispose();
     }
 }

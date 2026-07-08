@@ -10,6 +10,7 @@ public sealed class TelegramClient : ITelegramClient
 {
     private readonly HttpClient _http;
     private readonly string _baseUrl;
+    private readonly TelegramSendOptions _defaultSendOptions;
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
@@ -28,23 +29,25 @@ public sealed class TelegramClient : ITelegramClient
 
         _http = http;
         _baseUrl = $"https://api.telegram.org/bot{token}";
+        // Applied whenever a caller passes no explicit options. Without this, command
+        // replies went out with no parse_mode and their <b>/<code> tags showed up raw.
+        _defaultSendOptions = new TelegramSendOptions(
+            options.Value.ParseMode,
+            options.Value.DisableWebPagePreview);
     }
 
     public async Task SendMessageAsync(
         long chatId, string text, TelegramSendOptions? sendOptions, CancellationToken ct)
     {
+        var opts = sendOptions ?? _defaultSendOptions;
         var payload = new Dictionary<string, object?>
         {
             ["chat_id"] = chatId,
-            ["text"] = text
+            ["text"] = text,
+            ["parse_mode"] = opts.ParseMode,
+            ["disable_web_page_preview"] = opts.DisableWebPagePreview,
+            ["disable_notification"] = opts.DisableNotification
         };
-
-        if (sendOptions != null)
-        {
-            payload["parse_mode"] = sendOptions.ParseMode;
-            payload["disable_web_page_preview"] = sendOptions.DisableWebPagePreview;
-            payload["disable_notification"] = sendOptions.DisableNotification;
-        }
 
         using var response = await _http.PostAsJsonAsync(
             $"{_baseUrl}/sendMessage", payload, JsonOpts, ct);

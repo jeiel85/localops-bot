@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner.svg" width="900" alt="LocalOps Bot">
+  <img src="assets/banner.svg" width="900" alt="Homebase">
 </p>
 
 <p align="center">
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <b>LocalOps Bot</b> &mdash; 개인 Windows PC 상태, 부팅, 장애, 알림을 Telegram으로 확인하고 알림받는 개인용 모니터링 봇입니다.<br>
+  <b>Homebase</b> &mdash; 개인 Windows PC 상태, 부팅, 장애, 알림을 Telegram으로 확인하고 알림받는 개인용 모니터링 봇입니다.<br>
   외부 포트를 열지 않고, outbound HTTPS만으로 동작합니다.
 </p>
 

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Registers LocalOpsBot Tray app to auto-start on user login.
+    Registers the Homebase tray app to auto-start on user login.
 .DESCRIPTION
     Adds a HKCU Run registry entry for the current user.
     Run without elevation (current user scope).
