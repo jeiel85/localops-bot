@@ -14,20 +14,3 @@ updates:
       actions:
         patterns:
           - "*"
-
-  # .NET / NuGet - packages across LocalOpsBot.sln (src/* + tests). Minor and patch
-  # bumps are grouped into a single PR; majors arrive separately for careful review.
-  - package-ecosystem: "nuget"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: "deps"
-    groups:
-      dotnet-minor-patch:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
