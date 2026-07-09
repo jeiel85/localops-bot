@@ -9,13 +9,15 @@ namespace LocalOpsBot.Infrastructure.Telegram;
 public sealed class TelegramClient : ITelegramClient
 {
     private readonly HttpClient _http;
-    private readonly string _baseUrl;
+    private readonly string? _baseUrl; // null until a bot token is configured
     private readonly TelegramSendOptions _defaultSendOptions;
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
+
+    public bool IsConfigured => _baseUrl is not null;
 
     public TelegramClient(HttpClient http, IOptions<TelegramOptions> options)
     {
@@ -24,11 +26,11 @@ public sealed class TelegramClient : ITelegramClient
         // variable instead of being written in plain text into the config file.
         if (!string.IsNullOrEmpty(token) && token.StartsWith("ENV:", StringComparison.Ordinal))
             token = Environment.GetEnvironmentVariable(token.Substring(4)) ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(token))
-            throw new InvalidOperationException("Telegram bot token is not configured.");
 
         _http = http;
-        _baseUrl = $"https://api.telegram.org/bot{token}";
+        // No token yet (a fresh install before onboarding sets one): stay unconfigured and let
+        // callers idle, rather than throwing here — that would crash-loop the Agent host at start.
+        _baseUrl = string.IsNullOrWhiteSpace(token) ? null : $"https://api.telegram.org/bot{token}";
         // Applied whenever a caller passes no explicit options. Without this, command
         // replies went out with no parse_mode and their <b>/<code> tags showed up raw.
         _defaultSendOptions = new TelegramSendOptions(
@@ -36,9 +38,16 @@ public sealed class TelegramClient : ITelegramClient
             options.Value.DisableWebPagePreview);
     }
 
+    private void EnsureConfigured()
+    {
+        if (_baseUrl is null)
+            throw new InvalidOperationException("Telegram bot token is not configured.");
+    }
+
     public async Task SendMessageAsync(
         long chatId, string text, TelegramSendOptions? sendOptions, CancellationToken ct)
     {
+        EnsureConfigured();
         var opts = sendOptions ?? _defaultSendOptions;
         var payload = new Dictionary<string, object?>
         {
@@ -59,6 +68,7 @@ public sealed class TelegramClient : ITelegramClient
     public async Task<IReadOnlyList<TelegramUpdate>> GetUpdatesAsync(
         long? offset, int timeoutSeconds, CancellationToken ct)
     {
+        EnsureConfigured();
         var payload = new Dictionary<string, object?>
         {
             ["offset"] = offset,

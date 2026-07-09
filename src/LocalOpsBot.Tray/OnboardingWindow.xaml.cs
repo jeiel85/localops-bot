@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -196,6 +197,101 @@ public partial class OnboardingWindow : Window
     }
 
     private void Recheck_Click(object sender, RoutedEventArgs e) => Refresh();
+
+    private async void SaveApply_Click(object sender, RoutedEventArgs e)
+    {
+        var token = TokenInput.Text.Trim();
+        var chatId = ChatIdInput.Text.Trim();
+
+        if (!IsValidToken(token))
+        {
+            SetResult("Enter a valid bot token (looks like 123456:ABC-DEF…).", ok: false);
+            return;
+        }
+        if (!IsValidChatId(chatId))
+        {
+            SetResult("Enter a valid numeric chat ID (e.g. 123456789).", ok: false);
+            return;
+        }
+
+        var script = ResolveConfigureScriptPath();
+        if (script is null)
+        {
+            SetResult("configure-telegram.ps1 not found next to the app — reinstall Homebase.", ok: false);
+            return;
+        }
+
+        SaveApplyButton.IsEnabled = false;
+        RecheckButton.IsEnabled = false;
+        TestResultText.Foreground = (Brush)FindResource("Brush.InkSoft");
+        TestResultText.Text = "Applying — approve the admin prompt…";
+        try
+        {
+            // The one privileged step: elevate to set the machine token, write the chat allowlist,
+            // and restart the service. Inputs are format-validated above, so they carry no shell
+            // metacharacters. Verb=runas triggers the single UAC prompt.
+            var psi = new ProcessStartInfo("powershell.exe",
+                $"-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden " +
+                $"-File \"{script}\" -Token \"{token}\" -ChatId \"{chatId}\"")
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+                WindowStyle = ProcessWindowStyle.Hidden,
+            };
+            using var proc = Process.Start(psi);
+            if (proc is null)
+            {
+                SetResult("Couldn't start the configuration helper.", ok: false);
+                return;
+            }
+
+            await proc.WaitForExitAsync();
+            if (proc.ExitCode == 0)
+            {
+                TokenInput.Clear();
+                SetResult("Saved. The service is restarting — re-checking…", ok: true);
+                await Task.Delay(3000); // give the service time to come back up
+                Refresh();
+            }
+            else
+            {
+                SetResult($"Apply failed (exit {proc.ExitCode}). Double-check the token and chat ID.", ok: false);
+            }
+        }
+        catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
+        {
+            SetResult("Cancelled — admin approval is needed to save credentials.", ok: false);
+        }
+        catch (Exception ex)
+        {
+            SetResult($"Apply failed: {ex.Message}", ok: false);
+        }
+        finally
+        {
+            SaveApplyButton.IsEnabled = true;
+            RecheckButton.IsEnabled = true;
+        }
+    }
+
+    private void SetResult(string message, bool ok)
+    {
+        TestResultText.Foreground = (Brush)FindResource(ok ? "Brush.StatusOnline" : "Brush.StatusBad");
+        TestResultText.Text = message;
+    }
+
+    // Same formats the installer validates: token "digits:base64ish", chat ID signed integer.
+    private static bool IsValidToken(string token) => Regex.IsMatch(token, @"^\d{6,10}:[A-Za-z0-9_-]{30,}$");
+    private static bool IsValidChatId(string chatId) => Regex.IsMatch(chatId, @"^-?\d{4,}$");
+
+    // The Tray runs from {app}\Tray; configure-telegram.ps1 is installed one level up at {app}.
+    private static string? ResolveConfigureScriptPath()
+    {
+        var trayDir = AppContext.BaseDirectory.TrimEnd(System.IO.Path.DirectorySeparatorChar);
+        var appDir = System.IO.Directory.GetParent(trayDir)?.FullName;
+        if (appDir is null) return null;
+        var path = System.IO.Path.Combine(appDir, "configure-telegram.ps1");
+        return System.IO.File.Exists(path) ? path : null;
+    }
 
     private void GetStarted_Click(object sender, RoutedEventArgs e)
     {

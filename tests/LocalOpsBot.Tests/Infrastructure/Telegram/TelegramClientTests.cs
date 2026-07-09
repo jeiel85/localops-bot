@@ -17,6 +17,22 @@ public sealed class TelegramClientTests
     }
 
     [Fact]
+    public void IsConfigured_true_when_token_present()
+    {
+        Assert.True(CreateClient(new FakeHttpMessageHandler(), "123:test").IsConfigured);
+    }
+
+    [Fact]
+    public async Task Unconfigured_client_does_not_throw_at_construction_but_send_throws()
+    {
+        var client = CreateClient(new FakeHttpMessageHandler(), token: ""); // no crash here
+
+        Assert.False(client.IsConfigured);
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            client.SendMessageAsync(1, "x", null, CancellationToken.None));
+    }
+
+    [Fact]
     public async Task SendMessage_encodes_chat_id_and_text()
     {
         var handler = new FakeHttpMessageHandler();

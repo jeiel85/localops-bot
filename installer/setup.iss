@@ -55,6 +55,7 @@ Source: "..\publish\Tray\*"; DestDir: "{app}\Tray"; Flags: ignoreversion recurse
 Source: "..\config\appsettings.example.json"; DestDir: "{commonappdata}\LocalOpsBot\config"; Flags: ignoreversion onlyifdoesntexist
 ; PowerShell helpers (bundled alongside installer for reference)
 Source: "setup.ps1"; DestDir: "{app}"; Flags: ignoreversion
+Source: "configure-telegram.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "uninstall-service.ps1"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
@@ -66,78 +67,9 @@ Name: "{group}\Uninstall Homebase"; Filename: "{uninstallexe}"
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "LocalOpsBot.Tray"; ValueData: """{app}\Tray\LocalOpsBot.Tray.exe"""; Components: tray; Flags: uninsdeletevalue
 
 [Run]
-; The actual setup.ps1 handles service creation, env vars, and token/chat ID
-; We call it post-install with the values collected in the wizard.
-Filename: "powershell.exe"; Parameters: "-ExecutionPolicy Bypass -File ""{app}\setup.ps1"" -Token ""{code:GetToken}"" -ChatId ""{code:GetChatId}"" -NoInteractive -AgentSource ""{app}\Agent"" -TraySource ""{app}\Tray"""; StatusMsg: "Configuring service and environment..."; Flags: runhidden
-
-[Code]
-var
-  TokenPage: TInputQueryWizardPage;
-  ChatIdPage: TInputQueryWizardPage;
-
-function GetToken(Param: string): string;
-begin
-  Result := TokenPage.Values[0];
-end;
-
-function GetChatId(Param: string): string;
-begin
-  Result := ChatIdPage.Values[0];
-end;
-
-procedure InitializeWizard;
-begin
-  TokenPage := CreateInputQueryPage(wpSelectComponents,
-    'Telegram Bot Token', 'Enter your bot token from @BotFather',
-    'Create a bot at https://t.me/BotFather using /newbot, then paste the token below.' + #13#10 +
-    'Format: 1234567890:ABC-DEF1234ghIkl-zyx57W2v1u123ew11');
-  TokenPage.Add('Bot token:', False);
-  TokenPage.Values[0] := GetEnv('LOCALOPSBOT_TELEGRAM_TOKEN');
-
-  ChatIdPage := CreateInputQueryPage(TokenPage.ID,
-    'Telegram Chat ID', 'Enter the chat ID that will control this bot',
-    'Send any message to your bot, then visit:' + #13#10 +
-    'https://api.telegram.org/bot{your_token}/getUpdates' + #13#10 +
-    'Look for the "chat"."id" value (e.g. 123456789).');
-  ChatIdPage.Add('Chat ID:', False);
-end;
-
-function NextButtonClick(CurPageID: Integer): Boolean;
-var
-  Token, ChatId: string;
-begin
-  Result := True;
-  if CurPageID = TokenPage.ID then
-  begin
-    Token := Trim(TokenPage.Values[0]);
-    if Token = '' then
-    begin
-      MsgBox('Bot token is required. You can get one from @BotFather on Telegram.', mbError, MB_OK);
-      Result := False;
-    end
-    else if not ((Token[1] >= '0') and (Token[1] <= '9')) then
-    begin
-      MsgBox('Token should start with digits (e.g. 123456:ABC...).', mbError, MB_OK);
-      Result := False;
-    end;
-  end
-  else if CurPageID = ChatIdPage.ID then
-  begin
-    ChatId := Trim(ChatIdPage.Values[0]);
-    if ChatId = '' then
-    begin
-      MsgBox('Chat ID is required.', mbError, MB_OK);
-      Result := False;
-    end;
-  end;
-end;
-
-procedure CurStepChanged(CurStep: TSetupStep);
-begin
-  if CurStep = ssPostInstall then
-  begin
-    // Ensure the machine env var is set (setup.ps1 will also do this, but double-check)
-    if TokenPage.Values[0] <> '' then
-      SaveStringToFile(ExpandConstant('{commonappdata}\LocalOpsBot\.token'), TokenPage.Values[0], False);
-  end;
-end;
+; setup.ps1 installs the service and Tray but leaves Telegram unconfigured
+; (-SkipTelegram). The user enters the bot token and chat ID on first run, from
+; the Tray welcome window, which applies them with a one-time elevation.
+Filename: "powershell.exe"; Parameters: "-ExecutionPolicy Bypass -File ""{app}\setup.ps1"" -SkipTelegram -NoInteractive -AgentSource ""{app}\Agent"" -TraySource ""{app}\Tray"""; StatusMsg: "Installing service and tray..."; Flags: runhidden
+; Launch the Tray so first-run onboarding appears right after install.
+Filename: "{app}\Tray\LocalOpsBot.Tray.exe"; Description: "Start Homebase"; Flags: nowait postinstall skipifsilent; Components: tray

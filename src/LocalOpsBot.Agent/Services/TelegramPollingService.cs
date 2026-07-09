@@ -42,6 +42,17 @@ public sealed class TelegramPollingService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
         var opts = _options.Value;
+
+        if (!_telegram.IsConfigured)
+        {
+            // Fresh install before onboarding set a token: run idle instead of crash-looping.
+            // The token is read at startup, so polling begins after the service restarts.
+            _logger.LogWarning(
+                "Telegram polling idle: no bot token configured yet. Set it in the Homebase tray " +
+                "onboarding; polling starts after the service restarts.");
+            return;
+        }
+
         _logger.LogInformation("Telegram polling started");
 
         var stored = await _stateRepo.GetAsync(OffsetKey, ct);

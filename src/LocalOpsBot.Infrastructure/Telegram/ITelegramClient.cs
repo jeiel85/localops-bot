@@ -14,6 +14,12 @@ public sealed class UnixTimestampConverter : JsonConverter<DateTimeOffset>
 
 public interface ITelegramClient
 {
+    /// <summary>
+    /// False when no bot token is configured yet (a fresh install before onboarding sets it).
+    /// Consumers should idle instead of calling the API, which would otherwise fail.
+    /// </summary>
+    bool IsConfigured { get; }
+
     Task SendMessageAsync(long chatId, string text, TelegramSendOptions? options, CancellationToken ct);
     Task<IReadOnlyList<TelegramUpdate>> GetUpdatesAsync(long? offset, int timeoutSeconds, CancellationToken ct);
 }

@@ -102,6 +102,21 @@
               </StackPanel>
             </Grid>
 
+            <!-- Credential entry: applied via a one-time elevation (writes machine env + config) -->
+            <StackPanel Margin="0,10,0,0">
+              <TextBlock Style="{StaticResource Type.Micro}" TextWrapping="Wrap"
+                         Text="Enter your bot token and chat ID, then Save &amp; apply — this asks for admin once and restarts the service."/>
+              <TextBlock Style="{StaticResource Type.Micro}" Margin="0,6,0,0" Text="Bot token"/>
+              <TextBox x:Name="TokenInput" Margin="0,2,0,0" Padding="5,3"
+                       FontFamily="Consolas" FontSize="12"/>
+              <TextBlock Style="{StaticResource Type.Micro}" Margin="0,5,0,0" Text="Chat ID"/>
+              <TextBox x:Name="ChatIdInput" Margin="0,2,0,0" Padding="5,3"
+                       FontFamily="Consolas" FontSize="12"/>
+              <Button x:Name="SaveApplyButton" Style="{StaticResource Button.Signal}"
+                      Content="SAVE &amp; APPLY" Margin="0,7,0,0" HorizontalAlignment="Left"
+                      Click="SaveApply_Click"/>
+            </StackPanel>
+
             <!-- Actions -->
             <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
               <Button x:Name="TestButton" Style="{StaticResource Button.Signal}"
@@ -174,7 +189,7 @@
             <TextBlock Style="{StaticResource Type.Body}" TextWrapping="Wrap" Margin="0,3,0,0"
                        Text="2. Send your bot any message so it can learn your chat ID."/>
             <TextBlock Style="{StaticResource Type.Body}" TextWrapping="Wrap" Margin="0,3,0,0"
-                       Text="3. Re-run the installer to save your token and chat ID."/>
+                       Text="3. Enter your token and chat ID above, then click Save &amp; apply."/>
             <TextBlock Margin="0,8,0,0" FontFamily="{StaticResource Font.Sans}" FontSize="12" FontWeight="Bold">
               <Hyperlink NavigateUri="https://t.me/botfather"
                          RequestNavigate="Hyperlink_RequestNavigate"
@@ -190,7 +205,7 @@
     <DockPanel Grid.Row="2" Margin="0,12,0,0" LastChildFill="False">
       <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" MaxWidth="250"
                  Style="{StaticResource Type.Micro}" TextWrapping="Wrap"
-                 Text="To change your token or chat ID later, re-run the installer."/>
+                 Text="To change your token or chat ID later, update them above and Save &amp; apply."/>
       <Button DockPanel.Dock="Right" Style="{StaticResource Button.Carbon}"
               Content="GET STARTED" Click="GetStarted_Click"/>
     </DockPanel>

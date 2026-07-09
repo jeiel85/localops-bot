@@ -37,6 +37,7 @@ param(
     [string]$Token = "",
     [string]$ChatId = "",
     [switch]$NoInteractive,
+    [switch]$SkipTelegram,
     [string]$AgentSource = "",
     [string]$TraySource = ""
 )
@@ -154,10 +155,13 @@ function Write-Config {
     # are injected here; the bot token stays out of the file and is resolved at
     # runtime from the machine env var via the "ENV:" indirection.
     $dbPath = (Join-Path $DataDir "localops.db")
+    # Empty chat allowlist is valid: a fresh install stays unconfigured until onboarding sets it.
+    $chatIds = if ($ChatId) { @([long]$ChatId) } else { @() }
+    $chatJson = if ($ChatId) { "[$ChatId]" } else { "[]" }
     if ($ConfigSampleSrc -and (Test-Path $ConfigSampleSrc)) {
         $json = Get-Content $ConfigSampleSrc -Raw | ConvertFrom-Json
         $json.telegram.botToken       = "ENV:$EnvVarName"
-        $json.telegram.allowedChatIds = @([long]$ChatId)
+        $json.telegram.allowedChatIds = $chatIds
         $json.agent.databasePath      = $dbPath
         ($json | ConvertTo-Json -Depth 25) | Set-Content -Path $ConfigFile -Encoding UTF8
         Write-Ok "Configuration written to $ConfigFile (from example schema)"
@@ -167,7 +171,7 @@ function Write-Config {
 {
   "telegram": {
     "botToken": "ENV:$EnvVarName",
-    "allowedChatIds": [$ChatId],
+    "allowedChatIds": $chatJson,
     "pollingTimeoutSeconds": 30
   },
   "agent": {
@@ -202,10 +206,15 @@ Write-Host "==============================================`n" -ForegroundColor C
 $existingService = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
 if ($existingService) {
     Write-Warn "Service '$ServiceName' already exists (Status: $($existingService.Status))."
-    $ans = Read-Host "Overwrite installation? This will stop and recreate the service (y/N)"
-    if ($ans -ne 'y' -and $ans -ne 'Y') {
-        Write-Host "Setup cancelled by user." -ForegroundColor Yellow
-        exit 0
+    if ($NoInteractive -or $SkipTelegram) {
+        # Unattended (installer) path: never block on a prompt — reinstall in place.
+        Write-Warn "Reinstalling unattended: the service will be stopped and recreated."
+    } else {
+        $ans = Read-Host "Overwrite installation? This will stop and recreate the service (y/N)"
+        if ($ans -ne 'y' -and $ans -ne 'Y') {
+            Write-Host "Setup cancelled by user." -ForegroundColor Yellow
+            exit 0
+        }
     }
 }
 
@@ -232,22 +241,28 @@ if ($HasTrayBinaries) {
 # --- Step 1: Collect configuration ---
 Write-Step "Step 1/7: Telegram configuration"
 
-if ($NoInteractive) {
-    if (-not $Token) { $Token = [Environment]::GetEnvironmentVariable($EnvVarName, 'Machine') }
-    if (-not $Token) { $Token = Read-Host "Bot token (--Token)" }
-    if (-not $ChatId) { $ChatId = Read-Host "Chat ID (--ChatId)" }
+if ($SkipTelegram) {
+    Write-Ok "Skipping Telegram setup — configure it on first run from the Homebase tray."
+    $Token = ""
+    $ChatId = ""
 } else {
-    if (-not $Token) { $Token = Read-Token }
-    if (-not $ChatId) { $ChatId = Read-ChatId }
+    if ($NoInteractive) {
+        if (-not $Token) { $Token = [Environment]::GetEnvironmentVariable($EnvVarName, 'Machine') }
+        if (-not $Token) { $Token = Read-Host "Bot token (--Token)" }
+        if (-not $ChatId) { $ChatId = Read-Host "Chat ID (--ChatId)" }
+    } else {
+        if (-not $Token) { $Token = Read-Token }
+        if (-not $ChatId) { $ChatId = Read-ChatId }
+    }
+
+    if (-not $Token) { Write-ErrorExit "Telegram bot token is required." }
+    if (-not (Test-BotToken $Token)) { Write-ErrorExit "Invalid bot token format." }
+    if (-not $ChatId) { Write-ErrorExit "Chat ID is required." }
+    if (-not (Test-ChatId $ChatId)) { Write-ErrorExit "Invalid chat ID format." }
+
+    Write-Ok "Token: $($Token.Substring(0, [Math]::Min(8, $Token.Length)))..."
+    Write-Ok "Chat ID: $ChatId"
 }
-
-if (-not $Token) { Write-ErrorExit "Telegram bot token is required." }
-if (-not (Test-BotToken $Token)) { Write-ErrorExit "Invalid bot token format." }
-if (-not $ChatId) { Write-ErrorExit "Chat ID is required." }
-if (-not (Test-ChatId $ChatId)) { Write-ErrorExit "Invalid chat ID format." }
-
-Write-Ok "Token: $($Token.Substring(0, [Math]::Min(8, $Token.Length)))..."
-Write-Ok "Chat ID: $ChatId"
 
 # --- Step 2: Create directories ---
 Write-Step "Step 2/7: Creating directories"
@@ -270,11 +285,16 @@ if ($HasTrayBinaries) {
 # --- Step 4: Create config ---
 Write-Step "Step 4/7: Creating configuration"
 if (Test-Path $ConfigFile) {
-    $ans = Read-Host "Config already exists. Overwrite? (y/N)"
-    if ($ans -eq 'y' -or $ans -eq 'Y') {
-        Write-Config -ChatId $ChatId
+    if ($SkipTelegram) {
+        # Keep a prior onboarding-set config on reinstall; never prompt in this unattended path.
+        Write-Warn "Existing config preserved (configure Telegram from the tray)"
     } else {
-        Write-Warn "Existing config preserved"
+        $ans = Read-Host "Config already exists. Overwrite? (y/N)"
+        if ($ans -eq 'y' -or $ans -eq 'Y') {
+            Write-Config -ChatId $ChatId
+        } else {
+            Write-Warn "Existing config preserved"
+        }
     }
 } else {
     Write-Config -ChatId $ChatId
@@ -286,8 +306,12 @@ if ($ConfigSampleSrc -and -not (Test-Path $ConfigSample)) {
 
 # --- Step 5: Set environment variable ---
 Write-Step "Step 5/7: Setting environment variable"
-[Environment]::SetEnvironmentVariable($EnvVarName, $Token, 'Machine')
-Write-Ok "$EnvVarName set at machine level"
+if ($Token) {
+    [Environment]::SetEnvironmentVariable($EnvVarName, $Token, 'Machine')
+    Write-Ok "$EnvVarName set at machine level"
+} else {
+    Write-Warn "No token yet — skipping env var (onboarding sets it on first run)."
+}
 
 # --- Step 6: Create service ---
 Write-Step "Step 6/7: Creating Windows service"

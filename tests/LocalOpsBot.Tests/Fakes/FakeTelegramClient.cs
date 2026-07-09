@@ -4,6 +4,7 @@ namespace LocalOpsBot.Tests.Fakes;
 
 internal class FakeTelegramClient : ITelegramClient
 {
+    public bool IsConfigured { get; set; } = true;
     public List<(long ChatId, string Text, TelegramSendOptions? Options)> Sent { get; } = new();
     public Queue<IReadOnlyList<TelegramUpdate>> UpdateQueue { get; } = new();
 
