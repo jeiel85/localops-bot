@@ -48,6 +48,7 @@ builder.Services.AddWindowsService(options =>
 
 builder.Services.AddLocalOpsCore(builder.Configuration);
 builder.Services.AddLocalOpsTelegram(builder.Configuration);
+builder.Services.AddLocalOpsLlm();
 builder.Services.AddLocalOpsWindowsCollectors();
 builder.Services.AddLocalOpsData(builder.Configuration);
 builder.Services.AddSingleton<IAlertDispatcher, AlertDispatcher>();

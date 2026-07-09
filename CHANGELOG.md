@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+- `/advise` — ask a local LLM (Ollama) for plain-language health advice about your PC's current
+  state (CPU/RAM/disk/network + recent alerts), e.g. "CPU has been pegged, check for a runaway
+  process". Nothing is bundled: it talks to a local Ollama server configured under `llmAdvisor`
+  (endpoint/model), and falls back to a friendly setup hint when no server is reachable.
+
 ### Changed
 - Release assets are renamed to the Homebase brand: `Homebase-Setup.exe`, `Homebase-Setup.zip`,
   and `Homebase-Setup.zip.sha256` (previously `LocalOpsBot-Setup.*`). Internal names — the

@@ -1,3 +1,4 @@
+using LocalOpsBot.Core.Advisor;
 using LocalOpsBot.Core.Alerts;
 using LocalOpsBot.Core.Commands;
 using LocalOpsBot.Core.Monitoring;
@@ -31,6 +32,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ICommandHandler, HttpCommandHandler>();
         services.AddSingleton<ICommandHandler, LlmCommandHandler>();
         services.AddSingleton<ICommandHandler, DiagnosticsCommandHandler>();
+        services.AddSingleton<ICommandHandler, AdviseCommandHandler>();
 
         var alertingOpts = config.GetSection("alerting").Get<AlertingOptions>() ?? new AlertingOptions();
         services.AddSingleton(alertingOpts);
@@ -65,6 +67,10 @@ public static class ServiceCollectionExtensions
         var tcpPorts = devSection.GetSection("tcpPorts").Get<TcpPortConfig[]>() ?? [];
         services.AddSingleton<IReadOnlyList<TcpPortConfig>>(tcpPorts);
         services.AddSingleton(tcpPorts.AsEnumerable());
+
+        var llmOpts = config.GetSection("llmAdvisor").Get<LlmAdvisorOptions>() ?? new LlmAdvisorOptions();
+        services.AddSingleton(llmOpts);
+        services.AddSingleton<IPcStateAdvisor, PcStateAdvisor>();
 
         return services;
     }

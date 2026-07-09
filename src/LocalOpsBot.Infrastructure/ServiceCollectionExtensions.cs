@@ -1,9 +1,11 @@
 using System.Runtime.Versioning;
+using LocalOpsBot.Core.Advisor;
 using LocalOpsBot.Core.Commands;
 using LocalOpsBot.Core.Monitoring;
 using LocalOpsBot.Core.Notifications;
 using LocalOpsBot.Core.Updates;
 using LocalOpsBot.Infrastructure.Commands;
+using LocalOpsBot.Infrastructure.Llm;
 using LocalOpsBot.Infrastructure.Notifications;
 using LocalOpsBot.Infrastructure.Telegram;
 using LocalOpsBot.Infrastructure.Windows;
@@ -27,6 +29,14 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IChatAuthorizationPolicy, AllowedChatPolicy>();
 
+        return services;
+    }
+
+    // Local-LLM advisor client (Ollama HTTP). LlmAdvisorOptions is bound in AddLocalOpsCore;
+    // this just wires the typed HttpClient so the endpoint/model can be resolved at call time.
+    public static IServiceCollection AddLocalOpsLlm(this IServiceCollection services)
+    {
+        services.AddHttpClient<ILlmClient, OllamaLlmClient>();
         return services;
     }
 
