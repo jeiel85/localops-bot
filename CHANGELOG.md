@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- `/events` now shows the actual most-recent events. It previously shared the alert poller's
+  resume bookmark, so it usually returned "No recent events" and could even hide events from
+  the alert pipeline; it now reads independently, without touching poller state.
+
+### Changed
+- Windows Event Log read failures are now logged (once per failing log, plus a recovery note)
+  instead of being silently swallowed.
+
 ## v0.5.0 — Event Log Bookmarks & Poll Diagnostics
 
 ### Added

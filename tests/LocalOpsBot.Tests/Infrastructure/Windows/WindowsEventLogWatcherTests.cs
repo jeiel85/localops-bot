@@ -42,4 +42,40 @@ public sealed class WindowsEventLogWatcherTests
         // A large count here would mean the bookmark resume regressed to a full re-scan.
         Assert.True(second.Count < 200, $"expected a bounded resume, got {second.Count} events");
     }
+
+    [Fact]
+    public async Task ReadRecent_returns_at_most_the_requested_limit()
+    {
+        var watcher = new WindowsEventLogWatcher();
+
+        var recent = await watcher.ReadRecentAsync(ApplicationLogOptions(), 5, CancellationToken.None);
+
+        Assert.True(recent.Count <= 5, $"expected <= 5, got {recent.Count}");
+    }
+
+    [Fact]
+    public async Task ReadRecent_returns_events_newest_first()
+    {
+        var watcher = new WindowsEventLogWatcher();
+
+        var recent = await watcher.ReadRecentAsync(ApplicationLogOptions(), 10, CancellationToken.None);
+
+        for (var i = 1; i < recent.Count; i++)
+            Assert.True(recent[i - 1].TimeCreated >= recent[i].TimeCreated, "events must be ordered newest first");
+    }
+
+    [Fact]
+    public async Task ReadRecent_does_not_disturb_the_poll_baseline()
+    {
+        var watcher = new WindowsEventLogWatcher();
+        var options = ApplicationLogOptions();
+
+        // A /events read must not establish or advance the alert poller's bookmark...
+        await watcher.ReadRecentAsync(options, 10, CancellationToken.None);
+
+        // ...so the poller's first poll is still a fresh baseline that emits nothing. If
+        // ReadRecentAsync shared the bookmark, this poll would resume mid-log and could emit.
+        var firstPoll = await watcher.PollAsync(options, CancellationToken.None);
+        Assert.Empty(firstPoll);
+    }
 }

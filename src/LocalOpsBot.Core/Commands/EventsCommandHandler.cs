@@ -22,8 +22,10 @@ public sealed class EventsCommandHandler : ICommandHandler
         if (command.Args.Count > 0 && int.TryParse(command.Args[0], out var n))
             limit = Math.Clamp(n, 1, 20);
 
-        var all = await _eventLogWatcher.PollAsync(_options, ct);
-        var recent = all.Take(limit).ToList();
+        // Stateless read: shows the newest events without disturbing the alert poller's
+        // resume bookmark (previously /events shared PollAsync state, so it usually returned
+        // nothing and could hide events from the alert pipeline).
+        var recent = await _eventLogWatcher.ReadRecentAsync(_options, limit, ct);
 
         if (recent.Count == 0)
             return new CommandResult(true, "<b>\U0001f4cb Recent Events</b>\n\nNo recent events found.");
