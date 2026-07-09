@@ -8,7 +8,7 @@ using LocalOpsBot.Infrastructure.Windows;
 
 namespace LocalOpsBot.Tray;
 
-public partial class SettingsWindow : Window
+public partial class SettingsWindow : ThemedWindow
 {
     private const string ServiceName = "Homebase.Agent";
 

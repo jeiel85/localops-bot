@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.8.3 — Themed window title bars
+
+### Changed
+- The tray windows (dashboard, welcome, and the update dialog) now wear a custom Homebase title
+  bar — a carbon caption with the app icon, the title, and themed minimize/close buttons — instead
+  of the default Windows chrome, so the whole window matches the app. Dragging, Aero-Snap and the
+  taskbar keep working natively via WindowChrome; the fixed-size windows show minimize + close
+  (dialogs show close only).
+
 ## v0.8.2 — Consistent theming across the tray UI
 
 ### Changed

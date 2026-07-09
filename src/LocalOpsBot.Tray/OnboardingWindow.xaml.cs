@@ -15,7 +15,7 @@ namespace LocalOpsBot.Tray;
 /// never writes config, so it needs no elevation. Credential changes stay with the
 /// installer; onboarding only guides and verifies.
 /// </summary>
-public partial class OnboardingWindow : Window
+public partial class OnboardingWindow : ThemedWindow
 {
     private readonly ConnectionReadiness _readiness = new();
     private string _ollamaModel = "llama3.2:1b";

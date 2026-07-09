@@ -6,7 +6,7 @@ namespace LocalOpsBot.Tray;
 /// A small modal dialog drawn with the Homebase theme, used in place of the native Windows
 /// <c>MessageBox</c> so update prompts and notices match the rest of the app.
 /// </summary>
-public partial class MessageDialog : Window
+public partial class MessageDialog : ThemedWindow
 {
     private MessageDialog() => InitializeComponent();
 
