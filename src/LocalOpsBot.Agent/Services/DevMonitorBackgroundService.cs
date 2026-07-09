@@ -1,5 +1,6 @@
 using System.Runtime.Versioning;
 using LocalOpsBot.Core.Alerts;
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 using LocalOpsBot.Data.Models;
 using LocalOpsBot.Data.Repositories;
@@ -72,9 +73,9 @@ public sealed class DevMonitorBackgroundService : BackgroundService
 
                     await EvaluateAsync(
                         "http", result.Name, result.Success,
-                        downTitle: $"Endpoint down: {result.Name}",
+                        downTitle: Strings.EndpointDown(result.Name),
                         downBody: $"{result.Url} — {result.Error ?? $"HTTP {result.StatusCode}"}",
-                        recoveryTitle: $"Endpoint recovered: {result.Name}", ct);
+                        recoveryTitle: Strings.EndpointRecovered(result.Name), ct);
                 }
 
                 foreach (var p in _ports)
@@ -85,9 +86,9 @@ public sealed class DevMonitorBackgroundService : BackgroundService
 
                     await EvaluateAsync(
                         "port", result.Name, result.Open,
-                        downTitle: $"Port closed: {result.Name}",
-                        downBody: $"{result.Host}:{result.Port} — {result.Error ?? "connection failed"}",
-                        recoveryTitle: $"Port recovered: {result.Name}", ct);
+                        downTitle: Strings.PortClosed(result.Name),
+                        downBody: $"{result.Host}:{result.Port} — {result.Error ?? Strings.ConnectionFailed}",
+                        recoveryTitle: Strings.PortRecovered(result.Name), ct);
                 }
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)

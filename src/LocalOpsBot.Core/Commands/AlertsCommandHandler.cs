@@ -1,4 +1,5 @@
 using LocalOpsBot.Core.Alerts;
+using LocalOpsBot.Core.Localization;
 
 namespace LocalOpsBot.Core.Commands;
 
@@ -23,9 +24,9 @@ public sealed class AlertsCommandHandler : ICommandHandler
 
         var recent = await _alertStore.GetRecentAsync(count, ct);
         if (recent.Count == 0)
-            return new CommandResult(true, "<b>\U0001f4cb Recent Alerts</b>\n\nNo recent alerts.");
+            return new CommandResult(true, $"<b>\U0001f4cb {Strings.RecentAlertsTitle}</b>\n\n{Strings.NoRecentAlerts}");
 
-        var lines = new List<string> { "<b>\U0001f4cb Recent Alerts</b>\n" };
+        var lines = new List<string> { $"<b>\U0001f4cb {Strings.RecentAlertsTitle}</b>\n" };
         foreach (var alert in recent)
         {
             var icon = alert.Severity switch

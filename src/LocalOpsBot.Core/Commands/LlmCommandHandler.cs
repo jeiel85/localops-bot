@@ -1,3 +1,4 @@
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 
 namespace LocalOpsBot.Core.Commands;
@@ -20,13 +21,13 @@ public sealed class LlmCommandHandler : ICommandHandler
 
     public async Task<CommandResult> HandleAsync(BotCommand command, CancellationToken ct)
     {
-        var lines = new List<string> { "<b>\U0001f9e0 Local LLM Status</b>\n" };
+        var lines = new List<string> { $"<b>\U0001f9e0 {Strings.LocalLlmTitle}</b>\n" };
 
         foreach (var server in KnownServers)
         {
             var result = await _tcpMonitor.CheckAsync(server, ct);
             var icon = result.Open ? "✅" : "❌";
-            var status = result.Open ? $"running ({result.ResponseTimeMs}ms)" : "not running";
+            var status = result.Open ? Strings.LlmRunning($"{result.ResponseTimeMs}") : Strings.NotRunning;
             lines.Add($"{icon} <b>{server.Name}</b> — {status}");
             lines.Add($"  <code>{server.Host}:{server.Port}</code>");
         }

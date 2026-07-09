@@ -1,4 +1,5 @@
 using LocalOpsBot.Core.Alerts;
+using LocalOpsBot.Core.Localization;
 
 namespace LocalOpsBot.Core.Commands;
 
@@ -21,13 +22,13 @@ public sealed class MuteCommandHandler : ICommandHandler
         var duration = ParseDuration(durationStr);
 
         if (duration <= TimeSpan.Zero || duration > TimeSpan.FromDays(7))
-            return new CommandResult(false, "Invalid duration. Use e.g., /mute 30m, /mute 2h, /mute 1d (max 7d).");
+            return new CommandResult(false, Strings.InvalidDuration);
 
         var mutedUntil = DateTime.UtcNow.Add(duration);
         await _stateStore.SetAsync(MutedUntilKey, mutedUntil.ToString("O"), ct);
 
         return new CommandResult(true,
-            $"\U0001f515 Alerts muted for {FormatDuration(duration)} (until {mutedUntil.ToLocalTime():HH:mm}).");
+            $"\U0001f515 {Strings.AlertsMuted(FormatDuration(duration), $"{mutedUntil.ToLocalTime():HH:mm}")}");
     }
 
     private static TimeSpan ParseDuration(string input)

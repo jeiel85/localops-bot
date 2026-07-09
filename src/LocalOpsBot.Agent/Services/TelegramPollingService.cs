@@ -1,4 +1,5 @@
 using LocalOpsBot.Core.Commands;
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 using LocalOpsBot.Data.Repositories;
 using LocalOpsBot.Infrastructure.Telegram;
@@ -109,7 +110,7 @@ public sealed class TelegramPollingService : BackgroundService
         {
             _logger.LogWarning("Unauthorized chat {ChatId} from user {UserId}", cmd.ChatId, cmd.UserId);
             if (_options.Value.RespondToUnauthorized)
-                await _telegram.SendMessageAsync(cmd.ChatId, "Unauthorized.", null, ct);
+                await _telegram.SendMessageAsync(cmd.ChatId, Strings.Unauthorized, null, ct);
             return;
         }
 

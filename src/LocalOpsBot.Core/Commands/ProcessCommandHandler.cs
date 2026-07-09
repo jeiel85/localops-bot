@@ -1,3 +1,4 @@
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 
 namespace LocalOpsBot.Core.Commands;
@@ -21,17 +22,17 @@ public sealed class ProcessCommandHandler : ICommandHandler
     public async Task<CommandResult> HandleAsync(BotCommand command, CancellationToken ct)
     {
         if (_watches.Count == 0)
-            return new CommandResult(false, "No process watches configured.\nAdd `processWatches` to config.");
+            return new CommandResult(false, Strings.NoProcessWatches);
 
         var results = await _processCollector.CollectAsync(_watches, ct);
-        var lines = new List<string> { "<b>\u2699 Process Watch Status</b>\n" };
+        var lines = new List<string> { $"<b>\u2699 {Strings.ProcessWatchTitle}</b>\n" };
 
         foreach (var r in results)
         {
             var icon = r.IsRunning ? "\u2705" : "\u274c";
             lines.Add($"{icon} <b>{HtmlEscape(r.WatchName)}</b>");
-            lines.Add($"  Process: {string.Join(", ", r.ProcessNames)}");
-            lines.Add($"  Status: {(r.IsRunning ? "Running" : "Missing")} ({r.InstanceCount} instance(s))");
+            lines.Add($"  {Strings.ProcessLabel}: {string.Join(", ", r.ProcessNames)}");
+            lines.Add($"  {Strings.StatusWord}: {(r.IsRunning ? Strings.Running : Strings.Missing)} ({Strings.Instances(r.InstanceCount)})");
             lines.Add("");
         }
 

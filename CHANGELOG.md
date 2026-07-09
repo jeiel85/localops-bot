@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.7.5 — Bot replies in your language
+
+### Added
+- All bot responses are now localized, not just AI advice: command output (`/status`, `/help`,
+  `/disk`, `/diagnostics`, and the rest), automatic alerts (process/service/endpoint/port down and
+  recovered), the boot notification, and the active health-advice message. English is the default;
+  set `agent:language` to `"ko"` for Korean, or leave it empty to follow the OS display language
+  automatically.
+
+### Changed
+- `/advise` now replies in the same language as the rest of the bot: when `llmAdvisor.language` is
+  empty it follows `agent:language` (or the OS display language) instead of only the OS language.
+
+### Fixed
+- The boot notification timestamp shows a literal `KST` label again instead of a mangled
+  `+09:00ST` (the format string was treating `K` as a UTC-offset specifier).
+
 ## v0.7.4 — Faster advice and reply language
 
 ### Added

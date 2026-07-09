@@ -1,3 +1,4 @@
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 
 namespace LocalOpsBot.Core.Commands;
@@ -35,7 +36,7 @@ public sealed class StatusCommandHandler : ICommandHandler
 
         // Header
         var hostName = metricsResult.Snapshot?.HostName ?? Environment.MachineName;
-        lines.Add($"<b>\U0001f5a5 {HtmlEscape(hostName)} Status</b>\n");
+        lines.Add($"<b>\U0001f5a5 {HtmlEscape(hostName)} {Strings.StatusWord}</b>\n");
 
         // Uptime
         if (metricsResult.Success && metricsResult.Snapshot != null)
@@ -44,18 +45,18 @@ public sealed class StatusCommandHandler : ICommandHandler
             var uptimeStr = u.Days > 0
                 ? $"{u.Days}d {u.Hours:00}h {u.Minutes:00}m"
                 : $"{(int)u.TotalHours:00}h {u.Minutes:00}m";
-            lines.Add($"Uptime: <code>{uptimeStr}</code>");
+            lines.Add($"{Strings.Uptime}: <code>{uptimeStr}</code>");
         }
         else
         {
-            lines.Add("Uptime: <code>unknown</code>");
+            lines.Add($"{Strings.Uptime}: <code>{Strings.Unknown}</code>");
         }
 
         // CPU
         if (metricsResult.Success && metricsResult.Snapshot?.CpuUsagePercent != null)
             lines.Add($"CPU: <code>{metricsResult.Snapshot.CpuUsagePercent:F0}%</code>");
         else
-            lines.Add("CPU: <code>unknown</code>");
+            lines.Add($"CPU: <code>{Strings.Unknown}</code>");
 
         // RAM
         if (metricsResult.Success && metricsResult.Snapshot?.TotalMemoryBytes != null
@@ -69,38 +70,38 @@ public sealed class StatusCommandHandler : ICommandHandler
         }
         else
         {
-            lines.Add("RAM: <code>unknown</code>");
+            lines.Add($"RAM: <code>{Strings.Unknown}</code>");
         }
 
         // Network
         if (networkResult.Success && networkResult.Snapshot != null)
         {
-            var status = networkResult.Snapshot.IsOnline ? "Online" : "Offline";
-            var ip = networkResult.Snapshot.PrimaryIPv4 ?? "no IP";
-            lines.Add($"Network: <code>{status} ({ip})</code>");
+            var status = networkResult.Snapshot.IsOnline ? Strings.Online : Strings.Offline;
+            var ip = networkResult.Snapshot.PrimaryIPv4 ?? Strings.NoIp;
+            lines.Add($"{Strings.Network}: <code>{status} ({ip})</code>");
         }
         else
         {
-            lines.Add("Network: <code>unknown</code>");
+            lines.Add($"{Strings.Network}: <code>{Strings.Unknown}</code>");
         }
 
         // Disk
         if (diskResult.Success && diskResult.Snapshot != null && diskResult.Snapshot.Count > 0)
         {
-            lines.Add("\n<b>Disk</b>");
+            lines.Add($"\n<b>{Strings.Disk}</b>");
             foreach (var d in diskResult.Snapshot)
             {
                 if (!d.IsReady) continue;
                 var freeGb = d.FreeBytes / (1024.0 * 1024 * 1024);
                 var totalGb = d.TotalBytes / (1024.0 * 1024 * 1024);
-                lines.Add($"{d.Name}: <code>{freeGb:F1} GB free / {totalGb:F1} GB</code>");
+                lines.Add($"{d.Name}: <code>{freeGb:F1} GB {Strings.Free} / {totalGb:F1} GB</code>");
             }
         }
 
         // Temperature (hottest sensor per category; omitted when no sensors are exposed)
         if (tempResult.Success && tempResult.Snapshot is { Sensors.Count: > 0 } temps)
         {
-            lines.Add("\n<b>Temperature</b>");
+            lines.Add($"\n<b>{Strings.Temperature}</b>");
             foreach (var (kind, label) in new[] { ("Cpu", "CPU"), ("Gpu", "GPU"), ("Board", "Board") })
             {
                 var group = temps.Sensors.Where(x => x.Kind == kind).ToList();

@@ -1,3 +1,4 @@
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 
 namespace LocalOpsBot.Core.Commands;
@@ -16,7 +17,7 @@ public sealed class UptimeCommandHandler : ICommandHandler
         var result = await _metrics.CollectAsync(ct);
 
         if (!result.Success || result.Snapshot == null)
-            return new CommandResult(false, "Uptime unavailable.");
+            return new CommandResult(false, Strings.UptimeUnavailable);
 
         var u = result.Snapshot.Uptime;
         var uptimeStr = u.Days > 0
@@ -27,8 +28,8 @@ public sealed class UptimeCommandHandler : ICommandHandler
         var lines = new List<string>
         {
             $"<b>{host}</b>",
-            $"Uptime: <code>{uptimeStr}</code>",
-            $"Since: <code>{DateTimeOffset.UtcNow - u:yyyy-MM-dd HH:mm:ss UTC}</code>"
+            $"{Strings.Uptime}: <code>{uptimeStr}</code>",
+            $"{Strings.Since}: <code>{DateTimeOffset.UtcNow - u:yyyy-MM-dd HH:mm:ss UTC}</code>"
         };
 
         return new CommandResult(true, string.Join("\n", lines));

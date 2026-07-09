@@ -1,3 +1,4 @@
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 
 namespace LocalOpsBot.Core.Commands;
@@ -21,19 +22,19 @@ public sealed class ServicesCommandHandler : ICommandHandler
     public async Task<CommandResult> HandleAsync(BotCommand command, CancellationToken ct)
     {
         if (_watches.Count == 0)
-            return new CommandResult(false, "No service watches configured.\nAdd `serviceWatches` to config.");
+            return new CommandResult(false, Strings.NoServiceWatches);
 
         var results = await _serviceCollector.CollectAsync(_watches, ct);
-        var lines = new List<string> { "<b>\u2699 Service Watch Status</b>\n" };
+        var lines = new List<string> { $"<b>\u2699 {Strings.ServiceWatchTitle}</b>\n" };
 
         foreach (var r in results)
         {
             var icon = r.IsExpectedStatus ? "\u2705" : "\u26a0\ufe0f";
             lines.Add($"{icon} <b>{HtmlEscape(r.WatchName)}</b>");
-            lines.Add($"  Service: {HtmlEscape(r.ServiceName)}");
-            lines.Add($"  Status: {r.Status ?? "Unknown"} (expected: {_watches.FirstOrDefault(w => w.ServiceName == r.ServiceName)?.ExpectedStatus ?? "Running"})");
+            lines.Add($"  {Strings.ServiceLabel}: {HtmlEscape(r.ServiceName)}");
+            lines.Add($"  {Strings.StatusWord}: {r.Status ?? Strings.Unknown} ({Strings.Expected}: {_watches.FirstOrDefault(w => w.ServiceName == r.ServiceName)?.ExpectedStatus ?? "Running"})");
             if (r.FailureReason != null)
-                lines.Add($"  Error: {r.FailureReason}");
+                lines.Add($"  {Strings.ErrorLabel}: {r.FailureReason}");
             lines.Add("");
         }
 

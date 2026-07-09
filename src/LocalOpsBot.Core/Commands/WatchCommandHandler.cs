@@ -1,3 +1,4 @@
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 
 namespace LocalOpsBot.Core.Commands;
@@ -27,18 +28,18 @@ public sealed class WatchCommandHandler : ICommandHandler
     public async Task<CommandResult> HandleAsync(BotCommand command, CancellationToken ct)
     {
         if (_processWatches.Count == 0 && _serviceWatches.Count == 0)
-            return new CommandResult(false, "No watches configured.\nAdd `processWatches` or `serviceWatches` to config.");
+            return new CommandResult(false, Strings.NoWatches);
 
-        var lines = new List<string> { "<b>\ud83d\udc40 Watch Status</b>\n" };
+        var lines = new List<string> { $"<b>\ud83d\udc40 {Strings.WatchStatusTitle}</b>\n" };
 
         if (_processWatches.Count > 0)
         {
             var processResults = await _processCollector.CollectAsync(_processWatches, ct);
-            lines.Add("<b>\u2699 Process Watches</b>");
+            lines.Add($"<b>\u2699 {Strings.ProcessWatchesTitle}</b>");
             foreach (var r in processResults)
             {
                 var icon = r.IsRunning ? "\u2705" : "\u274c";
-                lines.Add($"{icon} <b>{HtmlEscape(r.WatchName)}</b> ({r.InstanceCount} instance(s))");
+                lines.Add($"{icon} <b>{HtmlEscape(r.WatchName)}</b> ({Strings.Instances(r.InstanceCount)})");
             }
             lines.Add("");
         }
@@ -46,7 +47,7 @@ public sealed class WatchCommandHandler : ICommandHandler
         if (_serviceWatches.Count > 0)
         {
             var serviceResults = await _serviceCollector.CollectAsync(_serviceWatches, ct);
-            lines.Add("<b>\ud83d\udee1\ufe0f Service Watches</b>");
+            lines.Add($"<b>\ud83d\udee1\ufe0f {Strings.ServiceWatchesTitle}</b>");
             foreach (var r in serviceResults)
             {
                 var icon = r.IsExpectedStatus ? "\u2705" : "\u274c";

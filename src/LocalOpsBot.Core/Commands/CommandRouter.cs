@@ -1,3 +1,5 @@
+using LocalOpsBot.Core.Localization;
+
 namespace LocalOpsBot.Core.Commands;
 
 public sealed class CommandRouter : ICommandRouter
@@ -16,7 +18,7 @@ public sealed class CommandRouter : ICommandRouter
 
         return Task.FromResult(new CommandResult(
             false,
-            $"Unknown command: /{command.Name}\nUse /help to see available commands.",
+            Strings.UnknownCommand(command.Name),
             SendResponse: true));
     }
 }

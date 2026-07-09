@@ -1,3 +1,4 @@
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 
 namespace LocalOpsBot.Core.Commands;
@@ -28,17 +29,17 @@ public sealed class EventsCommandHandler : ICommandHandler
         var recent = await _eventLogWatcher.ReadRecentAsync(_options, limit, ct);
 
         if (recent.Count == 0)
-            return new CommandResult(true, "<b>\U0001f4cb Recent Events</b>\n\nNo recent events found.");
+            return new CommandResult(true, $"<b>\U0001f4cb {Strings.RecentEventsTitle}</b>\n\n{Strings.NoRecentEvents}");
 
-        var lines = new List<string> { "<b>\U0001f4cb Recent Events</b>\n" };
+        var lines = new List<string> { $"<b>\U0001f4cb {Strings.RecentEventsTitle}</b>\n" };
 
         foreach (var e in recent)
         {
             var icon = e.Level == "Critical" ? "\U0001f525" : "\u26a0\ufe0f";
             var time = e.TimeCreated.ToLocalTime().ToString("MM-dd HH:mm");
             lines.Add($"{icon} <b>[{e.Level}]</b> {HtmlEscape(e.LogName)}");
-            lines.Add($"  Provider: {HtmlEscape(e.ProviderName ?? "?")} (EventId: {e.EventId})");
-            lines.Add($"  Time: {time}");
+            lines.Add($"  {Strings.ProviderLabel}: {HtmlEscape(e.ProviderName ?? "?")} (EventId: {e.EventId})");
+            lines.Add($"  {Strings.TimeLabel}: {time}");
             if (e.Message != null)
                 lines.Add($"  <code>{HtmlEscape(Truncate(e.Message, 200))}</code>");
             lines.Add("");

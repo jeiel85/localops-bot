@@ -1,3 +1,4 @@
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 
 namespace LocalOpsBot.Core.Commands;
@@ -21,9 +22,9 @@ public sealed class DevCommandHandler : ICommandHandler
     public async Task<CommandResult> HandleAsync(BotCommand command, CancellationToken ct)
     {
         if (_endpoints.Count == 0)
-            return new CommandResult(false, "No HTTP endpoints configured.\nAdd `developerMonitors.httpEndpoints` to config.");
+            return new CommandResult(false, Strings.NoHttpEndpoints);
 
-        var lines = new List<string> { "<b>\ud83d\udcbb Dev Endpoint Status</b>\n" };
+        var lines = new List<string> { $"<b>\ud83d\udcbb {Strings.DevEndpointTitle}</b>\n" };
 
         foreach (var ep in _endpoints)
         {
@@ -32,7 +33,7 @@ public sealed class DevCommandHandler : ICommandHandler
             var ms = result.ResponseTimeMs.HasValue ? $" ({result.ResponseTimeMs}ms)" : "";
             lines.Add($"{icon} <b>{HtmlEscape(result.Name)}</b>{ms}");
             lines.Add($"  URL: {HtmlEscape(result.Url)}");
-            lines.Add($"  Status: {(result.Success ? "OK" : result.Error)}");
+            lines.Add($"  {Strings.StatusWord}: {(result.Success ? Strings.Ok : result.Error)}");
             lines.Add("");
         }
 

@@ -1,3 +1,4 @@
+using LocalOpsBot.Core.Localization;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LocalOpsBot.Core.Commands;
@@ -20,16 +21,16 @@ public sealed class HelpCommandHandler : ICommandHandler
     {
         var lines = new List<string>
         {
-            "<b>\u2139\ufe0f Homebase Commands</b>\n"
+            $"<b>\u2139\ufe0f {Strings.HelpTitle}</b>\n"
         };
 
         foreach (var h in _services.GetServices<ICommandHandler>().OrderBy(h => h.CommandName))
         {
-            lines.Add($"<b>/{h.CommandName}</b> — {HtmlEscape(h.Description)}");
+            lines.Add($"<b>/{h.CommandName}</b> — {HtmlEscape(Strings.CommandDescription(h.CommandName))}");
         }
 
         lines.Add("");
-        lines.Add("Tip: Use /mute 1h to silence alerts, /unmute to resume.");
+        lines.Add(Strings.HelpTip);
         lines.Add("Source: https://github.com/jeiel85/homebase");
 
         return Task.FromResult(new CommandResult(true, string.Join("\n", lines)));

@@ -135,14 +135,15 @@ public sealed class PcStateAdvisor : IPcStateAdvisor
         $"Write the reply in {ResolveLanguage()}.\n\n" +
         "Current readings:\n" + summary;
 
-    // Reply language: the configured value, else the OS display language, else English.
+    // Reply language: the explicit llmAdvisor.language, else the bot's current UI language (which
+    // the Agent sets from agent:language, or the OS display language when that is empty), else English.
     private string ResolveLanguage()
     {
         if (!string.IsNullOrWhiteSpace(_options.Language))
             return _options.Language.Trim();
         try
         {
-            var ui = CultureInfo.InstalledUICulture;
+            var ui = CultureInfo.CurrentUICulture;
             var neutral = ui.IsNeutralCulture ? ui : ui.Parent;
             var name = neutral.EnglishName;
             return string.IsNullOrWhiteSpace(name) || name.StartsWith("Invariant", StringComparison.Ordinal)

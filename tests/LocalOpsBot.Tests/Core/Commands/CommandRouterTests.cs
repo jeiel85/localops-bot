@@ -1,4 +1,5 @@
 using LocalOpsBot.Core.Commands;
+using LocalOpsBot.Tests.Support;
 using Xunit;
 
 namespace LocalOpsBot.Tests.Core.Commands;
@@ -21,6 +22,7 @@ public sealed class CommandRouterTests
     [Fact]
     public async Task RouteAsync_returns_unknown_for_unregistered()
     {
+        using var _ = new CultureScope("en-US");
         var router = new CommandRouter([]);
 
         var cmd = new BotCommand("unknown", [], 1, null, "/unknown", DateTimeOffset.UtcNow);

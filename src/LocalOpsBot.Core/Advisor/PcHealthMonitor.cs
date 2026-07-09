@@ -1,5 +1,6 @@
 using System.Globalization;
 using LocalOpsBot.Core.Alerts;
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 
 namespace LocalOpsBot.Core.Advisor;
@@ -91,10 +92,10 @@ public sealed class PcHealthMonitor
             return new PollResult(AdviseOutcome.AdviceFailed, breaches, advice.Error);
 
         var trigger = string.Join("; ", breaches.Select(b => b.Detail));
-        var body = $"Triggered by: {trigger}\n\n{Truncate(advice.Text, MaxAdviceChars)}";
+        var body = $"{Strings.TriggeredBy(trigger)}\n\n{Truncate(advice.Text, MaxAdviceChars)}";
         await _dispatcher.DispatchAsync(new AlertEvent(
             Guid.NewGuid().ToString("N"), "advisor", AlertSeverity.Warning,
-            "PC health advice", body, "advisor:health", _machineName, DateTimeOffset.UtcNow), ct);
+            Strings.PcHealthAdvice, body, "advisor:health", _machineName, DateTimeOffset.UtcNow), ct);
 
         // Record the cooldown only after a successful dispatch, so a send failure lets it retry.
         await _state.SetAsync(LastAdvisedKey, DateTimeOffset.UtcNow.ToString("O"), ct);

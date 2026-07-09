@@ -1,5 +1,6 @@
 using System.Runtime.Versioning;
 using LocalOpsBot.Core.Alerts;
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 using LocalOpsBot.Data.Models;
 using LocalOpsBot.Data.Repositories;
@@ -73,9 +74,9 @@ public sealed class WatchdogBackgroundService : BackgroundService
 
                         await EvaluateAsync(
                             "process", r.WatchName, r.IsRunning,
-                            downTitle: $"Process down: {r.WatchName}",
-                            downBody: $"No running instance found (expected ≥{cfg?.MinInstances ?? 1}). Host: {_machineName}",
-                            recoveryTitle: $"Process recovered: {r.WatchName}",
+                            downTitle: Strings.ProcessDown(r.WatchName),
+                            downBody: Strings.ProcessDownBody(cfg?.MinInstances ?? 1, _machineName),
+                            recoveryTitle: Strings.ProcessRecovered(r.WatchName),
                             severityStr: cfg?.Severity ?? "Warning", ct);
                     }
                 }
@@ -89,9 +90,9 @@ public sealed class WatchdogBackgroundService : BackgroundService
 
                         await EvaluateAsync(
                             "service", r.WatchName, r.IsExpectedStatus,
-                            downTitle: $"Service not running: {r.WatchName}",
-                            downBody: $"Service '{r.ServiceName}' status: {r.Status ?? "unknown"}. Host: {_machineName}",
-                            recoveryTitle: $"Service recovered: {r.WatchName}",
+                            downTitle: Strings.ServiceNotRunning(r.WatchName),
+                            downBody: Strings.ServiceDownBody(r.ServiceName, r.Status ?? Strings.Unknown, _machineName),
+                            recoveryTitle: Strings.ServiceRecovered(r.WatchName),
                             severityStr: cfg?.Severity ?? "Warning", ct);
                     }
                 }

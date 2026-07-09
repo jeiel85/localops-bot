@@ -1,3 +1,4 @@
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 
 namespace LocalOpsBot.Core.Commands;
@@ -21,9 +22,9 @@ public sealed class PortsCommandHandler : ICommandHandler
     public async Task<CommandResult> HandleAsync(BotCommand command, CancellationToken ct)
     {
         if (_ports.Count == 0)
-            return new CommandResult(false, "No TCP ports configured.\nAdd `developerMonitors.tcpPorts` to config.");
+            return new CommandResult(false, Strings.NoTcpPorts);
 
-        var lines = new List<string> { "<b>\ud83d\udd17 TCP Port Status</b>\n" };
+        var lines = new List<string> { $"<b>\ud83d\udd17 {Strings.TcpPortTitle}</b>\n" };
 
         foreach (var p in _ports)
         {
@@ -32,7 +33,7 @@ public sealed class PortsCommandHandler : ICommandHandler
             var ms = result.ResponseTimeMs.HasValue ? $" ({result.ResponseTimeMs}ms)" : "";
             lines.Add($"{icon} <b>{HtmlEscape(result.Name)}</b>{ms}");
             lines.Add($"  Host: {result.Host}:{result.Port}");
-            lines.Add($"  Status: {(result.Open ? "Open" : result.Error)}");
+            lines.Add($"  {Strings.StatusWord}: {(result.Open ? Strings.PortOpen : result.Error)}");
             lines.Add("");
         }
 

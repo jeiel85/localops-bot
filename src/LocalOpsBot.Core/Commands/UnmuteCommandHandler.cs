@@ -1,4 +1,5 @@
 using LocalOpsBot.Core.Alerts;
+using LocalOpsBot.Core.Localization;
 
 namespace LocalOpsBot.Core.Commands;
 
@@ -18,6 +19,6 @@ public sealed class UnmuteCommandHandler : ICommandHandler
     public async Task<CommandResult> HandleAsync(BotCommand command, CancellationToken ct)
     {
         await _stateStore.SetAsync(MutedUntilKey, DateTime.UtcNow.ToString("O"), ct);
-        return new CommandResult(true, "\U0001f514 Alerts unmuted.");
+        return new CommandResult(true, $"\U0001f514 {Strings.AlertsUnmuted}");
     }
 }

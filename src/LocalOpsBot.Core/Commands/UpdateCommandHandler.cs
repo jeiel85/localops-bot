@@ -1,3 +1,4 @@
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Updates;
 
 namespace LocalOpsBot.Core.Commands;
@@ -19,7 +20,7 @@ public sealed class UpdateCommandHandler : ICommandHandler
         {
             var info = await _updater.CheckForUpdateAsync(ct);
             if (info == null)
-                return new CommandResult(true, $"<b>\u2705 Up-to-date</b>\nCurrent version: {currentVer}");
+                return new CommandResult(true, $"<b>\u2705 {Strings.UpToDateTitle}</b>\n{Strings.CurrentVersionLabel}: {currentVer}");
 
             // Download + verify synchronously so we can report success or failure back to
             // the user. Only if that succeeds do we launch the (self-restarting) apply step.
@@ -31,25 +32,24 @@ public sealed class UpdateCommandHandler : ICommandHandler
             catch (Exception ex)
             {
                 return new CommandResult(true,
-                    $"<b>\u26a0\ufe0f Update failed</b>\n" +
-                    $"v{info.Version} could not be installed: {ex.Message}\n" +
-                    $"The current version ({currentVer}) is still running.",
+                    $"<b>\u26a0\ufe0f {Strings.UpdateFailedTitle}</b>\n" +
+                    Strings.UpdateFailedBody($"{info.Version}", ex.Message, currentVer),
                     Error: ex.Message);
             }
 
             return new CommandResult(true, string.Join("\n", new[]
             {
-                $"<b>\ud83d\udce1 Update v{info.Version} downloaded &amp; verified</b>",
-                $"Current: {currentVer}",
-                $"Published: {info.PublishedAt:yyyy-MM-dd}",
+                $"<b>\ud83d\udce1 {Strings.UpdateDownloadedTitle($"{info.Version}")}</b>",
+                $"{Strings.CurrentLabel}: {currentVer}",
+                $"{Strings.PublishedLabel}: {info.PublishedAt:yyyy-MM-dd}",
                 "",
-                "Installing now \u2014 the service will restart in a few seconds."
+                Strings.InstallingNow
             }));
         }
         catch (UpdateCheckException ex)
         {
             return new CommandResult(true,
-                $"<b>\u26a0\ufe0f Update check failed</b>\n" +
+                $"<b>\u26a0\ufe0f {Strings.UpdateCheckFailedTitle}</b>\n" +
                 $"{ex.Kind}: {ex.Message}");
         }
     }

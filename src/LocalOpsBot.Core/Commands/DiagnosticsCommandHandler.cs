@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 using LocalOpsBot.Core.Alerts;
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 using Microsoft.Extensions.Configuration;
 
@@ -46,7 +47,7 @@ public sealed class DiagnosticsCommandHandler : ICommandHandler
         var version = Assembly.GetEntryAssembly()?
                           .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
                       ?? Assembly.GetEntryAssembly()?.GetName().Version?.ToString()
-                      ?? "unknown";
+                      ?? Strings.Unknown;
 
         string uptime;
         try
@@ -56,18 +57,18 @@ public sealed class DiagnosticsCommandHandler : ICommandHandler
                 ? $"{(int)elapsed.TotalDays}d {elapsed.Hours}h {elapsed.Minutes}m"
                 : $"{(int)elapsed.TotalHours}h {elapsed.Minutes}m";
         }
-        catch { uptime = "unknown"; }
+        catch { uptime = Strings.Unknown; }
 
         string dbStatus;
-        try { await _stateStore.GetAsync("telegram.last_update_offset", ct); dbStatus = "OK"; }
+        try { await _stateStore.GetAsync("telegram.last_update_offset", ct); dbStatus = Strings.Ok; }
         catch (Exception ex) { dbStatus = $"FAIL ({ex.GetType().Name})"; }
 
-        var muteStatus = "Off";
+        var muteStatus = Strings.Off;
         try
         {
             var mutedUntil = await _stateStore.GetAsync("alert.muted_until", ct);
             if (DateTime.TryParse(mutedUntil, null, DateTimeStyles.RoundtripKind, out var until) && DateTime.UtcNow < until)
-                muteStatus = $"until {until.ToLocalTime():HH:mm}";
+                muteStatus = Strings.MuteUntil($"{until.ToLocalTime():HH:mm}");
         }
         catch { /* leave Off */ }
 
@@ -80,34 +81,34 @@ public sealed class DiagnosticsCommandHandler : ICommandHandler
         }
         catch { alerts24h = -1; }
 
-        var forwarding = _config.GetSection("notificationForwarding").GetValue<bool>("enabled") ? "On" : "Off";
+        var forwarding = _config.GetSection("notificationForwarding").GetValue<bool>("enabled") ? Strings.On : Strings.Off;
 
         string lastPoll;
         var lastPollUtc = _pollStatus.LastSuccessfulPollUtc;
         if (lastPollUtc is null)
         {
-            lastPoll = "never";
+            lastPoll = Strings.Never;
         }
         else
         {
             var age = DateTimeOffset.UtcNow - lastPollUtc.Value;
             if (age < TimeSpan.Zero) age = TimeSpan.Zero;
-            lastPoll = $"{lastPollUtc.Value.ToLocalTime():HH:mm:ss} ({FormatAge(age)} ago)";
+            lastPoll = $"{lastPollUtc.Value.ToLocalTime():HH:mm:ss} ({Strings.TimeAgo(FormatAge(age))})";
         }
         var pollFailures = _pollStatus.ConsecutiveFailures;
 
         var lines = new List<string>
         {
-            "<b>\U0001f9ea Homebase Diagnostics</b>\n",
-            $"Version: <code>{version}</code>",
-            $"Agent uptime: <code>{uptime}</code>",
-            $"Database: <code>{dbStatus}</code>",
-            $"Last Telegram poll: <code>{lastPoll}</code>",
-            $"Consecutive poll failures: <code>{pollFailures}</code>",
-            $"Mute: <code>{muteStatus}</code>",
-            $"Watches: <code>{_processWatches.Count} process, {_serviceWatches.Count} service, {_httpEndpoints.Count} http, {_tcpPorts.Count} port</code>",
-            $"Alerts sent (24h): <code>{(alerts24h < 0 ? "?" : alerts24h.ToString())}</code>",
-            $"Notification forwarding: <code>{forwarding}</code>",
+            $"<b>\U0001f9ea {Strings.DiagnosticsTitle}</b>\n",
+            $"{Strings.VersionLabel}: <code>{version}</code>",
+            $"{Strings.AgentUptimeLabel}: <code>{uptime}</code>",
+            $"{Strings.DatabaseLabel}: <code>{dbStatus}</code>",
+            $"{Strings.LastPollLabel}: <code>{lastPoll}</code>",
+            $"{Strings.PollFailuresLabel}: <code>{pollFailures}</code>",
+            $"{Strings.MuteLabel}: <code>{muteStatus}</code>",
+            $"{Strings.WatchesLabel}: <code>{Strings.WatchesSummary(_processWatches.Count, _serviceWatches.Count, _httpEndpoints.Count, _tcpPorts.Count)}</code>",
+            $"{Strings.AlertsSent24hLabel}: <code>{(alerts24h < 0 ? "?" : alerts24h.ToString())}</code>",
+            $"{Strings.ForwardingLabel}: <code>{forwarding}</code>",
         };
 
         return new CommandResult(true, string.Join("\n", lines));

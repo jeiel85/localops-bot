@@ -1,4 +1,5 @@
 using LocalOpsBot.Core.Advisor;
+using LocalOpsBot.Core.Localization;
 
 namespace LocalOpsBot.Core.Commands;
 
@@ -23,14 +24,13 @@ public sealed class AdviseCommandHandler : ICommandHandler
         if (!result.Ok)
         {
             return new CommandResult(true,
-                "<b>\U0001f9e0 AI Advisor</b>\n\n" +
-                $"⚠️ {HtmlEscape(result.Error ?? "The advisor is unavailable.")}\n\n" +
-                "Make sure a local LLM server (Ollama) is running and the model is pulled. " +
-                "Use /llm to check the server, or run <code>ollama pull llama3.2:1b</code>.");
+                $"<b>\U0001f9e0 {Strings.AiAdvisorTitle}</b>\n\n" +
+                $"⚠️ {HtmlEscape(result.Error ?? Strings.AdvisorUnavailable)}\n\n" +
+                Strings.AdvisorSetupHint);
         }
 
         // The model's text is freeform, so escape it — Telegram HTML mode rejects stray &, <, >.
-        return new CommandResult(true, "<b>\U0001f9e0 AI Advisor</b>\n\n" + HtmlEscape(result.Text));
+        return new CommandResult(true, $"<b>\U0001f9e0 {Strings.AiAdvisorTitle}</b>\n\n" + HtmlEscape(result.Text));
     }
 
     private static string HtmlEscape(string value)

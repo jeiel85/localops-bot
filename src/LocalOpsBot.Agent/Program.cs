@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Runtime.Versioning;
 using LocalOpsBot.Agent.Services;
 using LocalOpsBot.Core;
@@ -39,6 +40,29 @@ Log.Logger = new LoggerConfiguration()
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 builder.Services.AddSerilog(Log.Logger, dispose: true);
+
+// --- Bot response language -------------------------------------------------
+// Localize user-facing bot text: use agent:language (a culture code like "ko" or "en"), or the
+// OS display language when empty. Set app-wide so background tasks reply in the same language.
+// Runs after Serilog init so an invalid code is logged rather than silently ignored.
+var configuredLanguage = builder.Configuration["agent:language"];
+try
+{
+    var culture = string.IsNullOrWhiteSpace(configuredLanguage)
+        ? CultureInfo.InstalledUICulture
+        : CultureInfo.GetCultureInfo(configuredLanguage);
+    CultureInfo.DefaultThreadCurrentCulture = culture;
+    CultureInfo.DefaultThreadCurrentUICulture = culture;
+}
+catch (CultureNotFoundException)
+{
+    // Unknown code: fall back to the OS display language and tell the user their setting was ignored.
+    CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InstalledUICulture;
+    CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InstalledUICulture;
+    Log.Warning(
+        "Configured agent:language '{Language}' is not a valid culture code (use e.g. \"ko\" or \"en\"); " +
+        "falling back to the OS display language.", configuredLanguage);
+}
 
 builder.Services.AddWindowsService(options =>
 {

@@ -1,3 +1,4 @@
+using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
 
 namespace LocalOpsBot.Core.Notifications;
@@ -12,12 +13,12 @@ public static class BootMessageFormatter
             ? $"{uptime.Days}d {uptime.Hours:00}h {uptime.Minutes:00}m"
             : $"{(int)uptime.TotalHours:00}h {uptime.Minutes:00}m {uptime.Seconds:00}s";
 
-        var ip = host.PrimaryIPv4 ?? "unknown";
+        var ip = host.PrimaryIPv4 ?? Strings.Unknown;
 
-        return $"🟢 <b>{HtmlEscape(host.MachineName)} boot detected</b>\n\n"
-             + $"Time: <code>{localNow:yyyy-MM-dd HH:mm:ss KST}</code>\n"
+        return $"🟢 <b>{Strings.BootDetected(HtmlEscape(host.MachineName))}</b>\n\n"
+             + $"{Strings.TimeLabel}: <code>{localNow:yyyy-MM-dd HH:mm:ss 'KST'}</code>\n"
              + $"IP: <code>{HtmlEscape(ip)}</code>\n"
-             + $"Uptime: <code>{uptimeStr}</code>";
+             + $"{Strings.Uptime}: <code>{uptimeStr}</code>";
     }
 
     private static string HtmlEscape(string value)

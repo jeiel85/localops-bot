@@ -1,6 +1,7 @@
 using LocalOpsBot.Core.Commands;
 using LocalOpsBot.Core.Monitoring;
 using LocalOpsBot.Tests.Fakes;
+using LocalOpsBot.Tests.Support;
 using Xunit;
 
 namespace LocalOpsBot.Tests.Core.Commands;
@@ -10,6 +11,7 @@ public sealed class StatusCommandHandlerTests
     [Fact]
     public async Task HandleAsync_includes_cpu_ram_network_disk_uptime()
     {
+        using var _ = new CultureScope("en-US");
         var handler = new StatusCommandHandler(
             new FakeSystemMetricsCollector(),
             new FakeDiskCollector(),
@@ -31,6 +33,7 @@ public sealed class StatusCommandHandlerTests
     [Fact]
     public async Task HandleAsync_shows_unknown_on_failure()
     {
+        using var _ = new CultureScope("en-US");
         var metrics = new FakeSystemMetricsCollector
         {
             NextResult = CollectorResult<SystemMetricSnapshot>.Fail("fail", DateTimeOffset.UtcNow)
