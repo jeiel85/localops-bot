@@ -1,4 +1,5 @@
 using LocalOpsBot.Core.Advisor;
+using LocalOpsBot.Core.Monitoring;
 using LocalOpsBot.Tests.Fakes;
 using Xunit;
 
@@ -6,12 +7,14 @@ namespace LocalOpsBot.Tests.Core.Advisor;
 
 public sealed class PcStateAdvisorTests
 {
-    private static PcStateAdvisor NewAdvisor(LlmAdvisorOptions options, FakeLlmClient llm) =>
+    private static PcStateAdvisor NewAdvisor(
+        LlmAdvisorOptions options, FakeLlmClient llm, ITemperatureCollector? temperature = null) =>
         new(options, llm,
             new FakeSystemMetricsCollector(),
             new FakeDiskCollector(),
             new FakeNetworkStatusChecker(),
-            new FakeAlertStore());
+            new FakeAlertStore(),
+            temperature ?? new FakeTemperatureCollector());
 
     [Fact]
     public async Task Advise_when_disabled_returns_not_ok()
@@ -34,6 +37,35 @@ public sealed class PcStateAdvisorTests
         Assert.Contains("CPU", summary);
         Assert.Contains("RAM", summary);
         Assert.Contains("Disk", summary);
+    }
+
+    [Fact]
+    public async Task Summary_includes_temperature_per_kind_max()
+    {
+        var advisor = NewAdvisor(new LlmAdvisorOptions(), new FakeLlmClient());
+
+        var summary = await advisor.BuildStateSummaryAsync(CancellationToken.None);
+
+        // Hottest sensor per category: CPU max(72,68)=72, GPU 65, Board 41.
+        Assert.Contains("CPU temp: 72", summary);
+        Assert.Contains("GPU temp: 65", summary);
+        Assert.Contains("Board temp: 41", summary);
+    }
+
+    [Fact]
+    public async Task Summary_omits_temperature_when_no_sensors()
+    {
+        var noSensors = new FakeTemperatureCollector
+        {
+            NextResult = CollectorResult<TemperatureSnapshot>.Ok(
+                new TemperatureSnapshot(Array.Empty<SensorReading>()), DateTimeOffset.UtcNow)
+        };
+        var advisor = NewAdvisor(new LlmAdvisorOptions(), new FakeLlmClient(), noSensors);
+
+        var summary = await advisor.BuildStateSummaryAsync(CancellationToken.None);
+
+        Assert.DoesNotContain("temp:", summary);
+        Assert.Contains("CPU load", summary); // rest of the summary is unaffected
     }
 
     [Fact]

@@ -80,6 +80,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IProcessCollector, WindowsProcessCollector>();
         services.AddSingleton<IWindowsServiceCollector, WindowsServiceCollector>();
         services.AddSingleton<IEventLogWatcher, WindowsEventLogWatcher>();
+        // Singleton so the LHM kernel driver opens once; the container disposes it on shutdown.
+        services.AddSingleton<ITemperatureCollector, LibreHardwareTemperatureCollector>();
 
         services.AddSingleton<IHttpEndpointMonitor, HttpEndpointMonitor>();
         services.AddSingleton<ITcpPortMonitor, TcpPortMonitor>();

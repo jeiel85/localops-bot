@@ -7,6 +7,7 @@ public sealed class StatusCommandHandler : ICommandHandler
     private readonly ISystemMetricsCollector _metrics;
     private readonly IDiskCollector _disk;
     private readonly INetworkStatusChecker _network;
+    private readonly ITemperatureCollector _temperature;
 
     public string CommandName => "status";
     public string Description => "Full PC status summary";
@@ -14,11 +15,13 @@ public sealed class StatusCommandHandler : ICommandHandler
     public StatusCommandHandler(
         ISystemMetricsCollector metrics,
         IDiskCollector disk,
-        INetworkStatusChecker network)
+        INetworkStatusChecker network,
+        ITemperatureCollector temperature)
     {
         _metrics = metrics;
         _disk = disk;
         _network = network;
+        _temperature = temperature;
     }
 
     public async Task<CommandResult> HandleAsync(BotCommand command, CancellationToken ct)
@@ -26,6 +29,7 @@ public sealed class StatusCommandHandler : ICommandHandler
         var metricsResult = await _metrics.CollectAsync(ct);
         var diskResult = await _disk.CollectAsync(ct);
         var networkResult = await _network.CollectAsync(ct);
+        var tempResult = await _temperature.CollectAsync(ct);
 
         var lines = new List<string>();
 
@@ -90,6 +94,18 @@ public sealed class StatusCommandHandler : ICommandHandler
                 var freeGb = d.FreeBytes / (1024.0 * 1024 * 1024);
                 var totalGb = d.TotalBytes / (1024.0 * 1024 * 1024);
                 lines.Add($"{d.Name}: <code>{freeGb:F1} GB free / {totalGb:F1} GB</code>");
+            }
+        }
+
+        // Temperature (hottest sensor per category; omitted when no sensors are exposed)
+        if (tempResult.Success && tempResult.Snapshot is { Sensors.Count: > 0 } temps)
+        {
+            lines.Add("\n<b>Temperature</b>");
+            foreach (var (kind, label) in new[] { ("Cpu", "CPU"), ("Gpu", "GPU"), ("Board", "Board") })
+            {
+                var group = temps.Sensors.Where(x => x.Kind == kind).ToList();
+                if (group.Count == 0) continue;
+                lines.Add($"{label}: <code>{group.Max(x => x.Celsius):F0}°C</code>");
             }
         }
 

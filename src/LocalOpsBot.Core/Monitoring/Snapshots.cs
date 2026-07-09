@@ -58,3 +58,12 @@ public sealed record WindowsServiceWatchStatus(
     string? Status,
     bool IsExpectedStatus,
     string? FailureReason);
+
+/// <summary>A single temperature reading from a hardware sensor.</summary>
+/// <param name="Name">Sensor label as reported by the hardware (e.g. "CPU Package", "GPU Core").</param>
+/// <param name="Kind">Coarse category: "Cpu", "Gpu", or "Board".</param>
+/// <param name="Celsius">Temperature in degrees Celsius.</param>
+public sealed record SensorReading(string Name, string Kind, double Celsius);
+
+/// <summary>Temperature sensors read from the machine at a point in time (may be empty).</summary>
+public sealed record TemperatureSnapshot(IReadOnlyList<SensorReading> Sensors);

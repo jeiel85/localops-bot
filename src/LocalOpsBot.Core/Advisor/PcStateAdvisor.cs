@@ -30,6 +30,7 @@ public sealed class PcStateAdvisor : IPcStateAdvisor
     private readonly IDiskCollector _disk;
     private readonly INetworkStatusChecker _network;
     private readonly IAlertStore _alerts;
+    private readonly ITemperatureCollector _temperature;
 
     public PcStateAdvisor(
         LlmAdvisorOptions options,
@@ -37,7 +38,8 @@ public sealed class PcStateAdvisor : IPcStateAdvisor
         ISystemMetricsCollector metrics,
         IDiskCollector disk,
         INetworkStatusChecker network,
-        IAlertStore alerts)
+        IAlertStore alerts,
+        ITemperatureCollector temperature)
     {
         _options = options;
         _llm = llm;
@@ -45,6 +47,7 @@ public sealed class PcStateAdvisor : IPcStateAdvisor
         _disk = disk;
         _network = network;
         _alerts = alerts;
+        _temperature = temperature;
     }
 
     public async Task<AdvisoryResult> AdviseAsync(CancellationToken ct)
@@ -91,6 +94,18 @@ public sealed class PcStateAdvisor : IPcStateAdvisor
             {
                 if (!d.IsReady) continue;
                 sb.AppendLine($"Disk {d.Name}: {d.FreeBytes / GiB:F0} GB free / {d.TotalBytes / GiB:F0} GB ({d.UsedPercent:F0}% used)");
+            }
+        }
+
+        var temp = await _temperature.CollectAsync(ct);
+        if (temp.Success && temp.Snapshot is { Sensors.Count: > 0 } t)
+        {
+            // Report the hottest sensor per category — that's what flags an abnormal reading.
+            foreach (var (kind, label) in new[] { ("Cpu", "CPU"), ("Gpu", "GPU"), ("Board", "Board") })
+            {
+                var group = t.Sensors.Where(x => x.Kind == kind).ToList();
+                if (group.Count == 0) continue;
+                sb.AppendLine($"{label} temp: {group.Max(x => x.Celsius):F0}°C");
             }
         }
 

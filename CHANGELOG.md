@@ -7,6 +7,12 @@
   state (CPU/RAM/disk/network + recent alerts), e.g. "CPU has been pegged, check for a runaway
   process". Nothing is bundled: it talks to a local Ollama server configured under `llmAdvisor`
   (endpoint/model), and falls back to a friendly setup hint when no server is reachable.
+- Temperature monitoring: CPU/GPU/board sensor readings now show in `/status` and feed `/advise`,
+  so an overheating component is something the advisor can actually flag. Read via
+  LibreHardwareMonitor inside the Agent (the elevated service; the tray can't read sensors);
+  machines that expose no sensors are handled gracefully, and implausible sentinel readings
+  (e.g. a `255°C` "not ready" value) are filtered out. Set `temperature.enabled` to `false` to
+  skip collection entirely — for instance if antivirus flags the kernel driver.
 
 ### Changed
 - Release assets are renamed to the Homebase brand: `Homebase-Setup.exe`, `Homebase-Setup.zip`,

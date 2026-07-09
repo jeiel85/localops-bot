@@ -13,7 +13,8 @@ public sealed class StatusCommandHandlerTests
         var handler = new StatusCommandHandler(
             new FakeSystemMetricsCollector(),
             new FakeDiskCollector(),
-            new FakeNetworkStatusChecker());
+            new FakeNetworkStatusChecker(),
+            new FakeTemperatureCollector());
 
         var cmd = new BotCommand("status", [], 1, null, "/status", DateTimeOffset.UtcNow);
         var result = await handler.HandleAsync(cmd, default);
@@ -24,6 +25,7 @@ public sealed class StatusCommandHandlerTests
         Assert.Contains("Network", result.ResponseText);
         Assert.Contains("Disk", result.ResponseText);
         Assert.Contains("Uptime", result.ResponseText);
+        Assert.Contains("Temperature", result.ResponseText);
     }
 
     [Fact]
@@ -41,8 +43,12 @@ public sealed class StatusCommandHandlerTests
         {
             NextResult = CollectorResult<NetworkStatusSnapshot>.Fail("fail", DateTimeOffset.UtcNow)
         };
+        var temperature = new FakeTemperatureCollector
+        {
+            NextResult = CollectorResult<TemperatureSnapshot>.Fail("fail", DateTimeOffset.UtcNow)
+        };
 
-        var handler = new StatusCommandHandler(metrics, disk, network);
+        var handler = new StatusCommandHandler(metrics, disk, network, temperature);
         var cmd = new BotCommand("status", [], 1, null, "/status", DateTimeOffset.UtcNow);
         var result = await handler.HandleAsync(cmd, default);
 
@@ -56,7 +62,8 @@ public sealed class StatusCommandHandlerTests
         var handler = new StatusCommandHandler(
             new FakeSystemMetricsCollector(),
             new FakeDiskCollector(),
-            new FakeNetworkStatusChecker());
+            new FakeNetworkStatusChecker(),
+            new FakeTemperatureCollector());
 
         var cmd = new BotCommand("status", [], 1, null, "/status", DateTimeOffset.UtcNow);
         var result = await handler.HandleAsync(cmd, default);

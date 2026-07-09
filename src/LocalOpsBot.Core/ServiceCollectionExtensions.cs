@@ -72,6 +72,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(llmOpts);
         services.AddSingleton<IPcStateAdvisor, PcStateAdvisor>();
 
+        var temperatureOpts = config.GetSection("temperature").Get<TemperatureOptions>() ?? new TemperatureOptions();
+        services.AddSingleton(temperatureOpts);
+
         return services;
     }
 }
