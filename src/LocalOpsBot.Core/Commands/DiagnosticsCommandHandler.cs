@@ -98,7 +98,7 @@ public sealed class DiagnosticsCommandHandler : ICommandHandler
 
         var lines = new List<string>
         {
-            "<b>\U0001f9ea LocalOps Diagnostics</b>\n",
+            "<b>\U0001f9ea Homebase Diagnostics</b>\n",
             $"Version: <code>{version}</code>",
             $"Agent uptime: <code>{uptime}</code>",
             $"Database: <code>{dbStatus}</code>",
