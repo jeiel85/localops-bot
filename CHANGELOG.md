@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.6.0 — Local AI Health Advice (Ollama)
 
 ### Added
 - `/advise` — ask a local LLM (Ollama) for plain-language health advice about your PC's current
