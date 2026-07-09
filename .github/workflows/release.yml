@@ -55,9 +55,14 @@ jobs:
       - name: Build release notes
         shell: pwsh
         run: |
+          # Notes = the download-guide header + ONLY this version's CHANGELOG section
+          # (from "## v<VER>" up to the next version heading), so they don't accumulate.
           $header = Get-Content installer\release-notes-header.md -Raw
           $changelog = Get-Content CHANGELOG.md -Raw
-          Set-Content -Path RELEASE_NOTES.md -Value ($header + "`r`n" + $changelog) -Encoding UTF8
+          $pattern = '(?ms)^##\s+v' + [regex]::Escape($env:VER) + '\b.*?(?=^##\s+v|\z)'
+          $match = [regex]::Match($changelog, $pattern)
+          $section = if ($match.Success) { $match.Value.TrimEnd() } else { $changelog.TrimEnd() }
+          Set-Content -Path RELEASE_NOTES.md -Value ($header + "`r`n`r`n" + $section + "`r`n") -Encoding UTF8
 
       - name: Create Release
         uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
