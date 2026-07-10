@@ -156,7 +156,7 @@
               </StackPanel>
             </Grid>
 
-            <!-- Install hint: server unreachable -->
+            <!-- Install hint: not installed -->
             <StackPanel x:Name="OllamaInstallHint" Visibility="Collapsed" Margin="0,8,0,0">
               <TextBlock Style="{StaticResource Type.Micro}" TextWrapping="Wrap"
                          Text="Install Ollama and start it to enable /advise and automatic health advice."/>
@@ -165,6 +165,14 @@
                            RequestNavigate="Hyperlink_RequestNavigate"
                            Foreground="{StaticResource Brush.InkSoft}">Get Ollama</Hyperlink>
               </TextBlock>
+            </StackPanel>
+
+            <!-- Start hint: installed but not running (one click to start + run at login) -->
+            <StackPanel x:Name="OllamaStartHint" Visibility="Collapsed" Margin="0,8,0,0">
+              <TextBlock Style="{StaticResource Type.Micro}" TextWrapping="Wrap"
+                         Text="Ollama is installed but not running. Start it and keep it running at login:"/>
+              <Button x:Name="OllamaStartButton" Style="{StaticResource Button.Signal}"
+                      Content="START OLLAMA" Margin="0,6,0,0" HorizontalAlignment="Left" Click="OllamaStart_Click"/>
             </StackPanel>
 
             <!-- Pull hint: model not installed -->

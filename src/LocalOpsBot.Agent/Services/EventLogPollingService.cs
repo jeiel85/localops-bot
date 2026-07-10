@@ -1,4 +1,5 @@
 using System.Runtime.Versioning;
+using LocalOpsBot.Core.Advisor;
 using LocalOpsBot.Core.Alerts;
 using LocalOpsBot.Core.Localization;
 using LocalOpsBot.Core.Monitoring;
@@ -15,14 +16,19 @@ public sealed class EventLogPollingService : BackgroundService
     private readonly EventAlertPolicy _policy;
     private readonly IAlertDispatcher _dispatcher;
     private readonly CollectorOptions _collectors;
+    private readonly IEventLogAdvisor _advisor;
     private readonly ILogger<EventLogPollingService> _logger;
     private readonly string _machineName = Environment.MachineName;
+
+    // Bound the LLM calls per poll cycle so a burst of distinct errors can't stall the loop.
+    private const int MaxLlmInterpretationsPerCycle = 3;
 
     public EventLogPollingService(
         IEventLogWatcher watcher,
         EventLogOptions options,
         IAlertDispatcher dispatcher,
         CollectorOptions collectors,
+        IEventLogAdvisor advisor,
         ILogger<EventLogPollingService> logger)
     {
         _watcher = watcher;
@@ -30,6 +36,7 @@ public sealed class EventLogPollingService : BackgroundService
         _policy = new EventAlertPolicy(options);
         _dispatcher = dispatcher;
         _collectors = collectors;
+        _advisor = advisor;
         _logger = logger;
     }
 
@@ -55,6 +62,7 @@ public sealed class EventLogPollingService : BackgroundService
                 _logger.LogInformation("Event log: {Count} new event(s)", events.Count);
 
                 var alerted = 0;
+                var interpreted = 0;
                 foreach (var e in events)
                 {
                     // Level gate + repeat-suppression: keep recurring/low-priority events from flooding.
@@ -69,6 +77,17 @@ public sealed class EventLogPollingService : BackgroundService
                     var message = Truncate(e.Message, _options.MessageMaxChars);
                     var body = $"{Strings.EventLogLabel}: {e.LogName} · {Strings.EventIdLabel}: {e.EventId} · {e.TimeCreated:yyyy-MM-dd HH:mm:ss}"
                              + (string.IsNullOrWhiteSpace(message) ? string.Empty : $"\n{message}");
+
+                    // Optional: ask the local LLM what this event means and what to check, and append
+                    // it. Best-effort — a down/disabled LLM just returns null and the alert still sends.
+                    // Capped per cycle so a burst of distinct errors can't stall the loop on LLM calls.
+                    if (_options.LlmInterpret && interpreted < MaxLlmInterpretationsPerCycle)
+                    {
+                        interpreted++;
+                        var note = await _advisor.InterpretAsync(e, ct);
+                        if (!string.IsNullOrWhiteSpace(note))
+                            body += $"\n\n\U0001f4a1 {note}";
+                    }
 
                     await _dispatcher.DispatchAsync(new AlertEvent(
                         Guid.NewGuid().ToString("N"),

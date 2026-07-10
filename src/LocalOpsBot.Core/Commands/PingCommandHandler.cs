@@ -9,7 +9,8 @@ public sealed class PingCommandHandler : ICommandHandler
     {
         var now = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
             command.ReceivedAt, "Korea Standard Time");
-        var response = $"pong\n{Environment.MachineName} | {now:yyyy-MM-dd HH:mm:ss KST}";
+        // 'KST' is a quoted literal — an unquoted K is the offset designator and would render "+09:00ST".
+        var response = $"pong\n{Environment.MachineName} | {now:yyyy-MM-dd HH:mm:ss 'KST'}";
 
         return Task.FromResult(new CommandResult(true, response));
     }

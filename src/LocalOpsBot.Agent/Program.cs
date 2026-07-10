@@ -32,6 +32,9 @@ var logDir = Environment.ExpandEnvironmentVariables(@"%ProgramData%\Homebase\log
 Directory.CreateDirectory(logDir);
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
+    // HttpClient request logging emits the full URL at Information — for the Telegram client that
+    // URL embeds the bot token. Drop these to Warning so the secret never lands in the log file.
+    .MinimumLevel.Override("System.Net.Http.HttpClient", Serilog.Events.LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .WriteTo.File(
         Path.Combine(logDir, "agent-.log"),

@@ -35,6 +35,13 @@ public sealed class EventLogOptions
     public int RepeatSuppressMinutes { get; set; } = 60;
 
     /// <summary>
+    /// When true, each alerted event is run through the local LLM (Ollama) to append a plain-language
+    /// "what this likely means + what to check" note. Off by default — it needs Ollama running and
+    /// adds a little latency per alert. Repeat-suppression already limits how often this fires.
+    /// </summary>
+    public bool LlmInterpret { get; set; } = false;
+
+    /// <summary>
     /// Binds settings from the <c>eventLog</c> config section. Each list is read explicitly with
     /// REPLACE semantics — the raw configuration binder <em>appends</em> to a non-empty default
     /// collection, which would let a user only extend (never narrow) the lists and could duplicate
@@ -48,6 +55,7 @@ public sealed class EventLogOptions
             Enabled = section.GetValue("enabled", defaults.Enabled),
             MessageMaxChars = section.GetValue("messageMaxChars", defaults.MessageMaxChars),
             RepeatSuppressMinutes = section.GetValue("repeatSuppressMinutes", defaults.RepeatSuppressMinutes),
+            LlmInterpret = section.GetValue("llmInterpret", defaults.LlmInterpret),
             Logs = ReadList(section, "logs", defaults.Logs),
             Levels = ReadList(section, "levels", defaults.Levels),
             AlertLevels = ReadList(section, "alertLevels", defaults.AlertLevels),

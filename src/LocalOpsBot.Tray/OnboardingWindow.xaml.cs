@@ -108,6 +108,7 @@ public partial class OnboardingWindow : ThemedWindow
     {
         _ollamaModel = p.Model;
         OllamaInstallHint.Visibility = Visibility.Collapsed;
+        OllamaStartHint.Visibility = Visibility.Collapsed;
         OllamaPullHint.Visibility = Visibility.Collapsed;
 
         switch (p.Status)
@@ -125,8 +126,17 @@ public partial class OnboardingWindow : ThemedWindow
                 break;
             default: // Unreachable
                 SetChip(OllamaChip, OllamaChipText, Chip.Setup);
-                OllamaStatusText.Text = "Not detected. Optional — install Ollama to enable AI advice.";
-                OllamaInstallHint.Visibility = Visibility.Visible;
+                if (OllamaSetup.IsInstalled())
+                {
+                    // Installed but not running — the common case. One click starts it + autostart.
+                    OllamaStatusText.Text = "Installed but not running. Start it to enable AI advice.";
+                    OllamaStartHint.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    OllamaStatusText.Text = "Not detected. Optional — install Ollama to enable AI advice.";
+                    OllamaInstallHint.Visibility = Visibility.Visible;
+                }
                 break;
         }
     }
@@ -150,6 +160,23 @@ public partial class OnboardingWindow : ThemedWindow
         catch (Exception ex)
         {
             OllamaStatusText.Text = $"Couldn't start the pull: {ex.Message}";
+        }
+    }
+
+    // One click: register Ollama to run at login (the missing piece) and start it now, then re-probe.
+    private async void OllamaStart_Click(object sender, RoutedEventArgs e)
+    {
+        OllamaStartButton.IsEnabled = false;
+        OllamaStatusText.Text = "Starting Ollama…";
+        try
+        {
+            OllamaSetup.StartAndEnableAutostart();
+            await Task.Delay(4000); // give the server a moment to come up before re-probing
+            Refresh();
+        }
+        finally
+        {
+            OllamaStartButton.IsEnabled = true;
         }
     }
 

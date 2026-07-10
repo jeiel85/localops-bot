@@ -64,6 +64,7 @@ public static class ServiceCollectionExtensions
         var llmOpts = config.GetSection("llmAdvisor").Get<LlmAdvisorOptions>() ?? new LlmAdvisorOptions();
         services.AddSingleton(llmOpts);
         services.AddSingleton<IPcStateAdvisor, PcStateAdvisor>();
+        services.AddSingleton<IEventLogAdvisor, EventLogAdvisor>();
 
         var temperatureOpts = config.GetSection("temperature").Get<TemperatureOptions>() ?? new TemperatureOptions();
         services.AddSingleton(temperatureOpts);

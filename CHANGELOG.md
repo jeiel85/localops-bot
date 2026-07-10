@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.11.0 — AI error interpretation + one-click Ollama
+
+### Added
+- **AI interpretation of error alerts.** With `eventLog.llmInterpret` enabled, each Windows
+  event-log Error/Critical alert is run through the local LLM (Ollama), which appends a
+  plain-language "what this likely means + what to check" note in your language. Best-effort — a
+  disabled or offline LLM just sends the alert without the note.
+- **One-click Ollama start.** The onboarding AI section now detects an installed-but-not-running
+  Ollama and shows a START OLLAMA button that launches it and registers it to run at login — so it
+  survives a reboot (the reason it kept showing "not detected").
+
+### Fixed
+- `/ping` printed the time as `+09:00ST`; it now shows `KST` (the format string was treating `K` as
+  the offset designator).
+
+### Security
+- The bot token no longer lands in the Agent log. HttpClient request logging prints the full
+  Telegram URL (token included) at Information — that category is now dropped to Warning.
+
 ## v0.10.1 — App selection is an exclude-list
 
 ### Changed

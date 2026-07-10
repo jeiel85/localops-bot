@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using LocalOpsBot.Core.Alerts;
 using LocalOpsBot.Core.Monitoring;
@@ -132,23 +131,6 @@ public sealed class PcStateAdvisor : IPcStateAdvisor
         "point out anything abnormal or worth checking and suggest concrete next steps. " +
         "Use a few short bullet points. If everything looks healthy, say so in one line. " +
         "Do not invent readings that are not given. " +
-        $"Write the reply in {ResolveLanguage()}.\n\n" +
+        $"Write the reply in {AdvisorLanguage.Resolve(_options.Language)}.\n\n" +
         "Current readings:\n" + summary;
-
-    // Reply language: the explicit llmAdvisor.language, else the bot's current UI language (which
-    // the Agent sets from agent:language, or the OS display language when that is empty), else English.
-    private string ResolveLanguage()
-    {
-        if (!string.IsNullOrWhiteSpace(_options.Language))
-            return _options.Language.Trim();
-        try
-        {
-            var ui = CultureInfo.CurrentUICulture;
-            var neutral = ui.IsNeutralCulture ? ui : ui.Parent;
-            var name = neutral.EnglishName;
-            return string.IsNullOrWhiteSpace(name) || name.StartsWith("Invariant", StringComparison.Ordinal)
-                ? "English" : name;
-        }
-        catch { return "English"; }
-    }
 }
