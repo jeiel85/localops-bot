@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.5 — Rounded window corners and a drop shadow
+
+### Changed
+- The tray windows now have Windows 11 rounded corners and a drop shadow (asked of DWM), so the
+  custom title bar sits in a proper window frame instead of a hard-edged rectangle. Dragging and
+  Aero-Snap are unchanged; on Windows 10 the corners simply stay square.
+
 ## v0.8.4 — Auto-update actually installs now
 
 ### Fixed
