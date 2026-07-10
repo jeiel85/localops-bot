@@ -43,19 +43,21 @@ internal sealed class NotificationForwardingHost : IDisposable
             logger.LogInformation("Forwarding host start: enabled={Enabled}", enabled);
             if (!enabled) return;
 
-            // Reuse the Agent's exact filter/masker construction (mode, allow/block lists, masking,
-            // default mask patterns) so both ends agree on what is forwarded.
+            // Reuse the Agent's masker construction (default mask patterns) from config.
             var services = new ServiceCollection();
             services.AddLocalOpsNotificationForwarding(config);
             _provider = services.BuildServiceProvider();
 
-            var filter = _provider.GetService<INotificationFilter>();
             var masker = _provider.GetService<ITextMasker>();
-            if (filter is null || masker is null)
+            if (masker is null)
             {
-                logger.LogWarning("Filter/masker not resolved; forwarding not started.");
+                logger.LogWarning("Text masker not resolved; forwarding not started.");
                 return;
             }
+
+            // App filtering uses the live user allow-list (dashboard-editable, applies within a poll
+            // cycle, no restart/elevation) rather than the static config list.
+            var filter = new DynamicAppFilter();
 
             var listener = new WindowsToastNotificationListener();
             _bridge = new NotificationBridgeClient();

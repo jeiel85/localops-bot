@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.10.0 — Choose which apps forward, and only new notifications
+
+### Added
+- **App selection for notification forwarding.** The dashboard now lists the apps that have sent
+  notifications; check the ones you want forwarded (none checked = forward everything). This breaks
+  notification feedback loops — leave a phone-mirroring app like "Phone Link" (휴대폰과 연결)
+  unchecked so its mirrored Telegram messages don't bounce straight back and pile up. Changes apply
+  within a few seconds with no administrator prompt and no restart (the selection lives in a
+  per-user file).
+
+### Changed
+- Forwarding no longer dumps the existing notification backlog when it starts — only notifications
+  that arrive after forwarding is running are sent, one at a time.
+
 ## v0.9.1 — Notification forwarding actually delivers now
 
 ### Fixed

@@ -175,6 +175,71 @@ public partial class SettingsWindow : ThemedWindow
     {
         try { ForwardingEnabledCheckBox.IsChecked = TrayConfig.IsNotificationForwardingEnabled(); }
         catch { ForwardingEnabledCheckBox.IsChecked = false; }
+        UpdateAppSelectionUi();
+    }
+
+    // App selection only makes sense while forwarding is on. Populating reads the apps the tray has
+    // seen plus the current allow-list, so a checked box means "forward this app".
+    private void UpdateAppSelectionUi()
+    {
+        var enabled = ForwardingEnabledCheckBox.IsChecked == true;
+        AppSelectionPanel.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
+        if (enabled) PopulateAppList();
+    }
+
+    private void PopulateAppList()
+    {
+        AppListPanel.Children.Clear();
+        var seen = ForwardingApps.ReadSeenApps();
+        var allow = new HashSet<string>(ForwardingApps.ReadAllowList(), StringComparer.OrdinalIgnoreCase);
+
+        if (seen.Count == 0)
+        {
+            AppListPanel.Children.Add(new TextBlock
+            {
+                Text = "No apps seen yet. Trigger a notification, then tap REFRESH.",
+                Style = (Style)FindResource("Type.Micro"),
+                TextWrapping = TextWrapping.Wrap
+            });
+            return;
+        }
+
+        foreach (var app in seen.OrderBy(a => a, StringComparer.CurrentCultureIgnoreCase))
+        {
+            AppListPanel.Children.Add(new CheckBox
+            {
+                Content = app,
+                IsChecked = allow.Contains(app),
+                Margin = new Thickness(0, 2, 0, 2),
+                Foreground = (Brush)FindResource("Brush.Ink")
+            });
+        }
+    }
+
+    private void SaveApps_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var chosen = AppListPanel.Children.OfType<CheckBox>()
+                .Where(c => c.IsChecked == true)
+                .Select(c => c.Content?.ToString() ?? string.Empty)
+                .Where(s => s.Length > 0)
+                .ToList();
+            ForwardingApps.WriteAllowList(chosen);
+            AppsStatusText.Text = chosen.Count == 0
+                ? "Saved — forwarding all apps."
+                : $"Saved — {chosen.Count} app(s). Applies within seconds.";
+        }
+        catch (Exception ex)
+        {
+            AppsStatusText.Text = $"Save failed: {ex.Message}";
+        }
+    }
+
+    private void RefreshApps_Click(object sender, RoutedEventArgs e)
+    {
+        PopulateAppList();
+        AppsStatusText.Text = string.Empty;
     }
 
     private async void ForwardingToggle_Click(object sender, RoutedEventArgs e)
@@ -222,6 +287,7 @@ public partial class SettingsWindow : ThemedWindow
         finally
         {
             ForwardingEnabledCheckBox.IsEnabled = true;
+            UpdateAppSelectionUi();
         }
     }
 

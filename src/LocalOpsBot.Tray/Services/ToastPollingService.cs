@@ -52,6 +52,19 @@ public sealed class ToastPollingService : BackgroundService
 
         _logger.LogInformation("Toast notification access granted");
 
+        // Baseline: seed the listener's seen-ids with the current Action Center backlog so only
+        // notifications that arrive AFTER forwarding starts get sent — don't dump the backlog.
+        try
+        {
+            var backlog = await _listener.PollAsync(ct);
+            foreach (var b in backlog) ForwardingApps.RecordSeenApp(b.SourceApp);
+            _logger.LogInformation("Baselined {Count} existing notification(s); not forwarded", backlog.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Baseline poll failed");
+        }
+
         var pollCount = 0;
         while (!ct.IsCancellationRequested)
         {
@@ -68,6 +81,10 @@ public sealed class ToastPollingService : BackgroundService
 
                 foreach (var notification in notifications)
                 {
+                    // Record every app that sends a notification so the dashboard can offer it,
+                    // even ones the filter will drop.
+                    ForwardingApps.RecordSeenApp(notification.SourceApp);
+
                     var filterResult = _filter.Evaluate(notification);
                     if (!filterResult.Allowed)
                     {

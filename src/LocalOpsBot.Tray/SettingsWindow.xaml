@@ -96,6 +96,26 @@
                       Click="ForwardingToggle_Click"/>
             <TextBlock Style="{StaticResource Type.Micro}" TextWrapping="Wrap"
                        Text="Forwards Windows notification title and body to your Telegram chat (codes, passwords and tokens are masked by default). Saving needs administrator approval; the tray restarts to apply."/>
+
+            <!-- App selection (visible only when forwarding is enabled). No elevation: applies live. -->
+            <StackPanel x:Name="AppSelectionPanel" Margin="0,12,0,0" Visibility="Collapsed">
+              <TextBlock Style="{StaticResource Type.Label}" Text="FORWARD FROM"/>
+              <TextBlock Style="{StaticResource Type.Micro}" TextWrapping="Wrap" Margin="0,2,0,6"
+                         Text="Check the apps to forward. None checked = forward everything. Leave a phone-mirroring app (e.g. Phone Link) unchecked to avoid a notification loop."/>
+              <Border BorderBrush="{StaticResource Brush.Hairline}" BorderThickness="1" MaxHeight="150"
+                      Background="{StaticResource Brush.Surface}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="6">
+                  <StackPanel x:Name="AppListPanel"/>
+                </ScrollViewer>
+              </Border>
+              <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                <Button x:Name="SaveAppsButton" Style="{StaticResource Button.Signal}" Content="SAVE" Click="SaveApps_Click"/>
+                <Button x:Name="RefreshAppsButton" Style="{StaticResource Button.Carbon}" Content="REFRESH"
+                        Margin="6,0,0,0" Click="RefreshApps_Click"/>
+                <TextBlock x:Name="AppsStatusText" VerticalAlignment="Center" Margin="8,0,0,0"
+                           Style="{StaticResource Type.Micro}"/>
+              </StackPanel>
+            </StackPanel>
           </StackPanel>
         </Border>
 
