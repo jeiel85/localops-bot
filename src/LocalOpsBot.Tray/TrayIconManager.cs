@@ -1,6 +1,5 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using LocalOpsBot.Core.Updates;
@@ -20,17 +19,13 @@ public sealed class TrayIconManager : IDisposable
     private static extern bool DestroyIcon(IntPtr handle);
 
     private readonly NotifyIcon _trayIcon;
-    private readonly UpdateService _updater;
+    private readonly UpdateCoordinator _updates = new();
     private readonly ToolStripMenuItem _updateItem;
     private SettingsWindow? _popup;
     private OnboardingWindow? _onboarding;
 
     public TrayIconManager()
     {
-        var http = new HttpClient();
-        http.DefaultRequestHeaders.UserAgent.ParseAdd("Homebase.Tray/0.1");
-        _updater = new UpdateService(http);
-
         _trayIcon = new NotifyIcon
         {
             Text = "Homebase",
@@ -48,7 +43,7 @@ public sealed class TrayIconManager : IDisposable
         setupItem.Click += (_, _) => ShowOnboarding();
         menu.Items.Add(setupItem);
 
-        _updateItem = new ToolStripMenuItem($"v{_updater.GetCurrentVersionString()} — Check for Updates");
+        _updateItem = new ToolStripMenuItem($"v{_updates.CurrentVersion} — Check for Updates");
         _updateItem.Click += async (_, _) => await CheckForUpdatesAsync();
         menu.Items.Add(_updateItem);
 
@@ -79,7 +74,7 @@ public sealed class TrayIconManager : IDisposable
 
     private void TogglePopup()
     {
-        _popup ??= new SettingsWindow();
+        _popup ??= new SettingsWindow(_updates);
         // Toggle only when it is already the foreground window; if it is hidden OR just behind
         // another window, bring it to the front instead of hiding it, so a tray click always
         // surfaces the dashboard rather than dismissing an out-of-sight one.
@@ -89,7 +84,7 @@ public sealed class TrayIconManager : IDisposable
 
     private void ShowPopup()
     {
-        _popup ??= new SettingsWindow();
+        _popup ??= new SettingsWindow(_updates);
         if (_popup.IsVisible) _popup.Activate();
         else _popup.ShowNearTray();
     }
@@ -116,7 +111,7 @@ public sealed class TrayIconManager : IDisposable
         try
         {
             await Task.Delay(TimeSpan.FromSeconds(10));
-            var info = await _updater.CheckForUpdateAsync(CancellationToken.None);
+            var info = await _updates.CheckAsync(CancellationToken.None);
             if (info != null)
                 _updateItem.Text = $"📡 Update v{info.Version} available!";
         }
@@ -125,54 +120,13 @@ public sealed class TrayIconManager : IDisposable
 
     private async Task CheckForUpdatesAsync()
     {
-        _updateItem.Text = "Checking…";
+        // The whole flow (check → confirm → download with a progress window → elevated apply) lives
+        // in UpdateCoordinator, shared with the dashboard. Reflect its phase text in the menu item.
         _updateItem.Enabled = false;
         try
         {
-            var info = await _updater.CheckForUpdateAsync(CancellationToken.None);
-            if (info == null)
-            {
-                _updateItem.Text = $"✅ v{_updater.GetCurrentVersionString()} — up to date";
-                MessageDialog.Show("Update Check",
-                    $"Homebase is up to date (v{_updater.GetCurrentVersionString()}).");
-            }
-            else
-            {
-                var confirmed = MessageDialog.Show("Update Available",
-                    $"Update v{info.Version} available!\nPublished: {info.PublishedAt:yyyy-MM-dd}",
-                    primary: "Download & Install", secondary: "Later");
-                if (confirmed)
-                {
-                    _updateItem.Text = "Downloading update…";
-                    // The tray menu closes on click, so surface progress as a balloon too —
-                    // otherwise the download looks like nothing is happening.
-                    _trayIcon.ShowBalloonTip(3000, "Homebase", "Downloading the update…", ToolTipIcon.Info);
-                    var zip = await _updater.DownloadUpdateAsync(info, null, CancellationToken.None);
-                    _updateItem.Text = "Installing update…";
-                    // The tray runs non-elevated; ask for UAC so the helper can replace the
-                    // binaries in Program Files and restart the service. Only shut down once the
-                    // elevated helper is actually running.
-                    if (_updater.ApplyUpdate(zip, elevate: true))
-                    {
-                        Application.Current.Shutdown();
-                    }
-                    else
-                    {
-                        _updateItem.Text = $"📡 v{info.Version} available";
-                        MessageDialog.Show("Update Cancelled",
-                            "Installing the update needs administrator approval. Nothing was changed — you can try again anytime.");
-                    }
-                }
-                else
-                {
-                    _updateItem.Text = $"📡 v{info.Version} available";
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _updateItem.Text = "⚠️ Update check failed";
-            MessageDialog.Show("Update Error", $"Update check failed: {ex.Message}");
+            var status = new Progress<string>(text => _updateItem.Text = text);
+            await _updates.RunInteractiveAsync(status);
         }
         finally
         {

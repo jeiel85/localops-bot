@@ -92,9 +92,23 @@
         <Border Style="{StaticResource Card}" Margin="0,0,0,12">
           <StackPanel>
             <CheckBox x:Name="ForwardingEnabledCheckBox" Content="Enable notification forwarding"
-                      IsChecked="False" Margin="0,0,0,4" Foreground="{StaticResource Brush.Ink}"/>
+                      IsChecked="False" Margin="0,0,0,4" Foreground="{StaticResource Brush.Ink}"
+                      Click="ForwardingToggle_Click"/>
             <TextBlock Style="{StaticResource Type.Micro}" TextWrapping="Wrap"
-                       Text="Requires Windows notification listener permission. Restart the tray app after enabling."/>
+                       Text="Forwards Windows notification title and body to your Telegram chat (codes, passwords and tokens are masked by default). Saving needs administrator approval; the tray restarts to apply."/>
+          </StackPanel>
+        </Border>
+
+        <!-- ═ UPDATES ═ -->
+        <Border Style="{StaticResource SectionHeaderBar}">
+          <TextBlock Style="{StaticResource Type.SectionLabel}" Text="UPDATES"/>
+        </Border>
+        <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+          <StackPanel>
+            <TextBlock x:Name="UpdateStatusText" Style="{StaticResource Type.Body}" TextWrapping="Wrap"
+                       Text="Check GitHub for a newer version." Margin="0,0,0,8"/>
+            <Button x:Name="CheckUpdateButton" Style="{StaticResource Button.Signal}"
+                    Content="CHECK FOR UPDATES" HorizontalAlignment="Left" Click="CheckUpdate_Click"/>
           </StackPanel>
         </Border>
 

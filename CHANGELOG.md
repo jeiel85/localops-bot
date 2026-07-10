@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.9.0 — Update progress, dashboard update check, and working notification forwarding
+
+### Added
+- **Download progress.** The tray auto-update now shows a themed progress window with a live
+  percentage while it downloads, then a "Verifying…" and "Installing…" phase, instead of a silent
+  balloon tip. Closing the window (or Cancel) stops the download.
+- **Update check from the dashboard.** The dashboard has a new UPDATES card showing the current
+  version with a "Check for updates" button, so updating no longer requires the tray right-click menu.
+- **Notification forwarding actually runs now.** The tray-side pipeline (Windows toast listener →
+  filter/mask → named pipe → Agent → Telegram) is wired up and starts when the feature is enabled —
+  previously the pieces existed but were never started, so nothing was ever forwarded. Sensitive
+  content (OTP codes, passwords, tokens) is masked by default.
+
+### Changed
+- **The "Enable notification forwarding" checkbox now persists.** It reads the current setting when
+  the dashboard opens, and toggling it saves to the machine config (one administrator prompt) and
+  restarts the Agent and tray so the change takes effect. It used to be a cosmetic control that
+  never remembered its state.
+- The update flow is shared between the tray menu and the dashboard, so both behave identically.
+
+### Fixed
+- The auto-update apply step now retries file copies a few times, so a binary that stays briefly
+  locked (antivirus scan, lingering handle) right after the old version exits no longer fails the
+  whole update.
+
 ## v0.8.6 — Quieter, configurable event-log alerts
 
 ### Added

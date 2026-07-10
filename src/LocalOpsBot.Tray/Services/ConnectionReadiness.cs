@@ -30,7 +30,6 @@ internal sealed record OllamaProbe(
 internal sealed class ConnectionReadiness
 {
     private const string ServiceName = "Homebase.Agent";
-    private const string ConfigPath  = @"C:\ProgramData\Homebase\config\appsettings.json";
     private const string TokenEnvVar = "HOMEBASE_TELEGRAM_TOKEN";
 
     public ReadinessSnapshot Probe()
@@ -98,13 +97,9 @@ internal sealed class ConnectionReadiness
     private static string Redact(string message, string token) =>
         string.IsNullOrEmpty(token) ? message : message.Replace(token, "***");
 
-    // Mirror the Agent's config sources: the installer-written ProgramData file, then
-    // HOMEBASE__ env overrides. Rebuilt per call so it reflects the current file state.
-    private static IConfigurationRoot LoadConfig() =>
-        new ConfigurationBuilder()
-            .AddJsonFile(ConfigPath, optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables("HOMEBASE__")
-            .Build();
+    // Same config sources the Agent reads (ProgramData JSON + HOMEBASE__ env), via the shared
+    // loader. Rebuilt per call so it reflects the current file state.
+    private static IConfigurationRoot LoadConfig() => TrayConfig.Load();
 
     // Mirrors TelegramClient's "ENV:VARNAME" indirection so the secret stays out of the
     // config file. Reads the machine-level env var explicitly (allowed without elevation)

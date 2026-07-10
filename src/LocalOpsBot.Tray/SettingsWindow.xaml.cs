@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.ServiceProcess;
 using System.Windows;
 using System.Windows.Controls;
@@ -5,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using LocalOpsBot.Core.Monitoring;
 using LocalOpsBot.Infrastructure.Windows;
+using LocalOpsBot.Tray.Services;
 
 namespace LocalOpsBot.Tray;
 
@@ -15,20 +17,23 @@ public partial class SettingsWindow : ThemedWindow
     private readonly ISystemMetricsCollector _metrics = new WindowsSystemMetricsCollector();
     private readonly IDiskCollector _disk = new WindowsDiskCollector();
     private readonly INetworkStatusChecker _network = new WindowsNetworkStatusChecker();
+    private readonly UpdateCoordinator _updates;
     private readonly DispatcherTimer _timer;
     private bool _refreshing;
 
-    public SettingsWindow()
+    internal SettingsWindow(UpdateCoordinator updates)
     {
         InitializeComponent();
+        _updates = updates;
 
         var ver = typeof(SettingsWindow).Assembly.GetName().Version;
         AboutVersionText.Text = $"Homebase v{ver?.ToString(3) ?? "?"}";
+        UpdateStatusText.Text = $"Current version: v{_updates.CurrentVersion}";
 
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
         _timer.Tick += (_, _) => Refresh();
 
-        Loaded += (_, _) => { Refresh(); _timer.Start(); };
+        Loaded += (_, _) => { Refresh(); LoadForwardingState(); _timer.Start(); };
         Closed += (_, _) => _timer.Stop();
     }
 
@@ -163,6 +168,91 @@ public partial class SettingsWindow : ThemedWindow
 
     private void Close_Click(object sender, RoutedEventArgs e) => Hide();
 
+    // ── Notification forwarding ────────────────────────────────────────────────────────────────
+    // Reflect the persisted config state. Setting IsChecked here does NOT raise Click, so it never
+    // re-triggers the toggle handler below.
+    private void LoadForwardingState()
+    {
+        try { ForwardingEnabledCheckBox.IsChecked = TrayConfig.IsNotificationForwardingEnabled(); }
+        catch { ForwardingEnabledCheckBox.IsChecked = false; }
+    }
+
+    private async void ForwardingToggle_Click(object sender, RoutedEventArgs e)
+    {
+        var enable = ForwardingEnabledCheckBox.IsChecked == true;
+
+        var confirmed = MessageDialog.Show(
+            enable ? "Enable Notification Forwarding" : "Disable Notification Forwarding",
+            enable
+                ? "This forwards your Windows notifications (title and body) to your Telegram chat. " +
+                  "Saving needs administrator approval, and the tray restarts to start listening. Continue?"
+                : "Stop forwarding Windows notifications to Telegram? Saving needs administrator approval.",
+            primary: enable ? "Enable" : "Disable", secondary: "Cancel");
+        if (!confirmed)
+        {
+            ForwardingEnabledCheckBox.IsChecked = !enable; // revert — nothing changed
+            return;
+        }
+
+        ForwardingEnabledCheckBox.IsEnabled = false;
+        try
+        {
+            var saved = await NotificationForwardingConfigurator.SetEnabledAsync(enable);
+            if (!saved)
+            {
+                ForwardingEnabledCheckBox.IsChecked = !enable; // UAC declined
+                MessageDialog.Show("Notification Forwarding",
+                    "Couldn't save the setting — administrator approval is required. Nothing was changed.");
+                return;
+            }
+
+            // The tray must restart to start/stop the notification listener with the new state.
+            var restart = MessageDialog.Show("Restart Homebase",
+                enable
+                    ? "Forwarding is enabled. The tray needs to restart to start listening — restart now?"
+                    : "Forwarding is disabled. The tray needs to restart to stop listening — restart now?",
+                primary: "Restart Now", secondary: "Later");
+            if (restart) RestartTray();
+        }
+        catch (Exception ex)
+        {
+            ForwardingEnabledCheckBox.IsChecked = !enable;
+            MessageDialog.Show("Notification Forwarding", $"Couldn't save the setting:\n{ex.Message}");
+        }
+        finally
+        {
+            ForwardingEnabledCheckBox.IsEnabled = true;
+        }
+    }
+
+    private static void RestartTray()
+    {
+        try
+        {
+            var exe = Environment.ProcessPath;
+            if (exe is not null)
+                Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true });
+        }
+        catch { /* best-effort — worst case the user relaunches from the Start menu */ }
+        App.IsShuttingDown = true;
+        System.Windows.Application.Current.Shutdown();
+    }
+
+    // ── Updates ────────────────────────────────────────────────────────────────────────────────
+    private async void CheckUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        CheckUpdateButton.IsEnabled = false;
+        try
+        {
+            var status = new Progress<string>(text => UpdateStatusText.Text = text);
+            await _updates.RunInteractiveAsync(status);
+        }
+        finally
+        {
+            CheckUpdateButton.IsEnabled = true;
+        }
+    }
+
     // Tray-popup behaviour: anchor bottom-right above the taskbar and bring it to the foreground.
     // Closing (X or CLOSE) hides rather than destroys, so the same instance reopens on the next
     // tray click. It intentionally does NOT auto-hide on deactivation: launched from the WinForms
@@ -187,6 +277,9 @@ public partial class SettingsWindow : ThemedWindow
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
+        // During a programmatic shutdown (e.g. an auto-update restart) let the close proceed;
+        // otherwise a tray click / X hides the dashboard so the same instance reopens later.
+        if (App.IsShuttingDown) { base.OnClosing(e); return; }
         e.Cancel = true;
         Hide();
     }

@@ -1,0 +1,41 @@
+<local:ThemedWindow xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:LocalOpsBot.Tray"
+        x:Class="LocalOpsBot.Tray.UpdateProgressWindow"
+        Style="{StaticResource Window.Chrome}"
+        Title="Homebase Update"
+        Icon="pack://application:,,,/Resources/homebase.ico"
+        Width="420" SizeToContent="Height"
+        ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False"
+        Background="{StaticResource Brush.Canvas}"
+        FontFamily="{StaticResource Font.Sans}"
+        TextOptions.TextFormattingMode="Display">
+  <Grid Margin="14">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <Border Grid.Row="0" Style="{StaticResource SectionHeaderBar}" Margin="0,0,0,12">
+      <TextBlock Style="{StaticResource Type.SectionLabel}" Text="SOFTWARE UPDATE"/>
+    </Border>
+
+    <Border Grid.Row="1" Style="{StaticResource Card}">
+      <StackPanel>
+        <TextBlock x:Name="StatusText" Style="{StaticResource Type.Body}"
+                   Text="Preparing…" Margin="0,0,0,8"/>
+        <Grid>
+          <ProgressBar x:Name="ProgressBar" Style="{StaticResource Gauge}" Height="18"
+                       Foreground="{StaticResource Brush.Signal}"/>
+          <TextBlock x:Name="PercentText" Text="0%" HorizontalAlignment="Center" VerticalAlignment="Center"
+                     FontSize="11" FontWeight="Bold" Foreground="{StaticResource Brush.Ink}"/>
+        </Grid>
+      </StackPanel>
+    </Border>
+
+    <Button Grid.Row="2" x:Name="CancelButton" Style="{StaticResource Button.Carbon}" Content="CANCEL"
+            HorizontalAlignment="Right" Margin="0,12,0,0" Click="Cancel_Click"/>
+  </Grid>
+</local:ThemedWindow>

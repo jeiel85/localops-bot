@@ -202,6 +202,21 @@ function Write-Log($m) {
     try { Add-Content -Path $log -Value $line -ErrorAction SilentlyContinue } catch { }
 }
 
+# Copy with retries: even after the processes exit, a binary can stay briefly locked (AV scan,
+# lingering handle). Retry a few times before giving up rather than failing the whole update.
+function Copy-WithRetry($src, $dest) {
+    for ($i = 0; $i -lt 5; $i++) {
+        try {
+            Copy-Item $src $dest -Recurse -Force -ErrorAction Stop
+            return
+        } catch {
+            Write-Log ('Copy attempt ' + ($i + 1) + ' failed: ' + $_.Exception.Message)
+            Start-Sleep -Seconds 2
+        }
+    }
+    throw 'Failed to copy files after retries; a file may still be locked.'
+}
+
 try { New-Item -ItemType Directory -Force -Path $logDir | Out-Null } catch { }
 
 try {
@@ -229,12 +244,12 @@ try {
     }
 
     Write-Log 'Updating Agent...'
-    Copy-Item (Join-Path $agentSrc '*') $agentDir -Recurse -Force
+    Copy-WithRetry (Join-Path $agentSrc '*') $agentDir
 
     if (Test-Path $traySrc) {
         Write-Log 'Updating Tray...'
         New-Item -ItemType Directory -Force -Path $trayDir | Out-Null
-        Copy-Item (Join-Path $traySrc '*') $trayDir -Recurse -Force
+        Copy-WithRetry (Join-Path $traySrc '*') $trayDir
     }
 
     Write-Log 'Starting service...'
