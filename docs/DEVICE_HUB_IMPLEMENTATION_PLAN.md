@@ -1,6 +1,6 @@
 # Homebase Device Hub — 구현 계획
 
-> 상태: **계획 확정 대기 / 코드 착수 전**
+> 상태: **TRAIN-A Phase-1 완료 · v0.13.1 릴리스 (2026-07-15). 재개점: Phase-2 (DB V2, GOAL-05)**
 > 근거 설계: [`docs/homebase-connect-design-bundle/`](homebase-connect-design-bundle/)
 > 작성일: 2026-07-15 · 대상 브랜치: `main` (net9.0)
 
