@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://homebase.local/schemas/device-envelope.schema.json",
+  "title": "Homebase Device Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "messageId",
+    "schemaVersion",
+    "messageType",
+    "source",
+    "traceId",
+    "hopCount",
+    "maxHops",
+    "createdAt",
+    "sensitivity",
+    "delivery",
+    "body"
+  ],
+  "properties": {
+    "messageId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "messageType": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "source": {
+      "$ref": "#/$defs/endpoint"
+    },
+    "target": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/endpoint"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "traceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "correlationId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "causationId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "hopCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 8
+    },
+    "maxHops": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expiresAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": [
+        "Normal",
+        "Private",
+        "Sensitive",
+        "Secret"
+      ]
+    },
+    "delivery": {
+      "type": "string",
+      "enum": [
+        "BestEffort",
+        "AtLeastOnce",
+        "Acknowledged"
+      ]
+    },
+    "body": {
+      "type": "object"
+    },
+    "payload": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/payload"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "metadata": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "endpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transportId",
+        "endpointId"
+      ],
+      "properties": {
+        "transportId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "endpointId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "deviceId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transferId",
+        "sizeBytes"
+      ],
+      "properties": {
+        "transferId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "fileName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 255
+        },
+        "mimeType": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        },
+        "sizeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

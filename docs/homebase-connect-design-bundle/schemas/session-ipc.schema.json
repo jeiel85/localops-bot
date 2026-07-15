@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://homebase.local/schemas/session-ipc.schema.json",
+  "title": "Homebase Session Bridge Message",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "messageId",
+    "kind",
+    "operation",
+    "sentAt",
+    "body"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "messageId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "hello",
+        "challenge",
+        "challenge_response",
+        "request",
+        "response",
+        "event",
+        "cancel",
+        "heartbeat",
+        "goodbye"
+      ]
+    },
+    "operation": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "correlationId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "sentAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expiresAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "body": {
+      "type": "object"
+    }
+  }
+}
